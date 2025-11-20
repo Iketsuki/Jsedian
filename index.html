@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,7 +25,7 @@
                         textMuted: 'var(--text-muted)',
                         borderMain: 'var(--border-main)',
                         accent: 'var(--accent)',
-                        accentHover: 'var(--accent-hover)',
+                        tagColor: 'var(--tag-color)',
                     }
                 }
             }
@@ -36,14 +36,14 @@
         :root {
             /* Light Theme Defaults */
             --bg-main: #ffffff;
-            --bg-sidebar: #f3f4f6;
+            --bg-sidebar: #f9fafb;
             --bg-item: #ffffff;
-            --bg-hover: #e5e7eb;
+            --bg-hover: #f3f4f6;
             --text-main: #1f2937;
             --text-muted: #6b7280;
             --border-main: #e5e7eb;
             --accent: #8b5cf6;
-            --accent-hover: #7c3aed;
+            --tag-color: #10b981; /* Emerald 500 */
             --scroll-track: #f3f4f6;
             --scroll-thumb: #d1d5db;
         }
@@ -58,7 +58,7 @@
             --text-muted: #9ca3af;
             --border-main: #1f2937;
             --accent: #8b5cf6;
-            --accent-hover: #7c3aed;
+            --tag-color: #34d399; /* Emerald 400 */
             --scroll-track: #1f2937;
             --scroll-thumb: #4b5563;
         }
@@ -86,23 +86,33 @@
         .markdown-preview a { color: #60a5fa; text-decoration: underline; }
         .markdown-preview hr { border-color: var(--border-main); margin: 2em 0; }
 
-        /* Wikilink */
+        /* Custom Inline Elements */
         .wikilink {
             color: var(--accent);
             cursor: pointer;
             background: rgba(139, 92, 246, 0.1);
             padding: 0 4px;
             border-radius: 4px;
+            font-weight: 500;
         }
         .wikilink.is-missing { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
 
-        /* Sidebar Item States */
+        .tag-pill {
+            color: var(--tag-color);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 0 6px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-right: 2px;
+        }
+
+        /* Sidebar */
         .sidebar-item { cursor: pointer; user-select: none; }
         .sidebar-item:hover { background-color: var(--bg-hover); }
         .sidebar-item.active { background-color: var(--bg-hover); border-left: 3px solid var(--accent); font-weight: 600; color: var(--text-main); }
-        .sidebar-item.selected { background-color: rgba(139, 92, 246, 0.2); }
+        .sidebar-item.selected { background-color: rgba(139, 92, 246, 0.15); }
         
-        /* Drag and Drop Visuals */
         .drop-target { border: 2px dashed var(--accent); background-color: rgba(139, 92, 246, 0.1); }
 
         #graph-container { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-main); z-index: 40; }
@@ -114,8 +124,8 @@
     <aside class="w-64 bg-bgSidebar border-r border-borderMain flex flex-col flex-shrink-0 z-50 transition-colors duration-300">
         <div class="p-4 border-b border-borderMain flex items-center justify-between">
             <h1 class="text-xl font-bold tracking-tight text-textMain"><i class="fa-solid fa-circle-nodes text-accent mr-2"></i>Nexus</h1>
-            <button id="btn-theme" class="text-textMuted hover:text-accent transition-colors">
-                <i class="fa-solid fa-moon"></i>
+            <button id="btn-theme" class="text-textMuted hover:text-accent transition-colors" title="Toggle Theme">
+                <i class="fa-regular fa-sun"></i>
             </button>
         </div>
         
@@ -131,10 +141,10 @@
         <!-- Footer Actions -->
         <div class="p-3 border-t border-borderMain bg-bgSidebar">
             <div class="grid grid-cols-2 gap-2 mb-2">
-                <button id="btn-new-page" class="bg-accent hover:bg-accentHover text-white py-2 rounded text-xs font-bold transition-colors">
+                <button id="btn-new-page" class="bg-accent hover:bg-accentHover text-white py-2 rounded text-xs font-bold transition-colors shadow-sm">
                     <i class="fa-solid fa-file mr-1"></i> New Page
                 </button>
-                <button id="btn-new-folder" class="bg-bgHover hover:bg-borderMain text-textMain py-2 rounded text-xs font-bold transition-colors">
+                <button id="btn-new-folder" class="bg-white border border-borderMain hover:bg-bgHover text-textMain py-2 rounded text-xs font-bold transition-colors shadow-sm dark:bg-gray-800 dark:border-gray-700">
                     <i class="fa-solid fa-folder mr-1"></i> Folder
                 </button>
             </div>
@@ -161,15 +171,15 @@
                     <i class="fa-regular fa-trash-can"></i>
                 </button>
                 <div class="h-4 w-px bg-borderMain mx-2"></div>
-                <button id="btn-toggle-view" class="text-textMuted hover:text-textMain px-3 py-1 rounded hover:bg-bgHover transition-colors flex items-center" title="Graph View">
-                    <i class="fa-solid fa-share-nodes mr-2"></i> Graph
+                <button id="btn-toggle-view" class="text-textMuted hover:text-textMain px-3 py-1 rounded hover:bg-bgHover transition-colors flex items-center bg-white border border-borderMain shadow-sm dark:bg-gray-800 dark:border-gray-700" title="Graph View">
+                    <i class="fa-solid fa-share-nodes mr-2 text-accent"></i> Graph View
                 </button>
             </div>
         </header>
 
         <!-- Workspace -->
         <div id="workspace" class="flex flex-1 overflow-hidden relative z-10">
-            <textarea id="markdown-input" class="w-1/2 h-full bg-bgMain text-textMain p-8 resize-none focus:outline-none font-mono text-sm leading-relaxed border-r border-borderMain overflow-y-auto transition-colors" placeholder="Start typing..."></textarea>
+            <textarea id="markdown-input" class="w-1/2 h-full bg-bgMain text-textMain p-8 resize-none focus:outline-none font-mono text-sm leading-relaxed border-r border-borderMain overflow-y-auto transition-colors" placeholder="Start typing... Use [[Link]] or #tag"></textarea>
             <div id="markdown-preview" class="w-1/2 h-full bg-bgMain text-textMain p-8 overflow-y-auto markdown-preview transition-colors"></div>
         </div>
 
@@ -177,10 +187,12 @@
         <div id="graph-container">
             <canvas id="graph-canvas"></canvas>
             <div class="absolute top-4 right-4 bg-bgSidebar border border-borderMain p-2 rounded text-xs text-textMuted shadow-lg">
-                <p>Drag to move • Scroll to zoom</p>
+                <p><i class="fa-solid fa-hand-pointer mr-1"></i> Drag nodes</p>
+                <p><i class="fa-solid fa-magnifying-glass mr-1"></i> Scroll to zoom</p>
+                <p><i class="fa-solid fa-arrow-pointer mr-1"></i> Click to open</p>
             </div>
-            <button id="btn-close-graph" class="absolute top-4 left-4 bg-bgSidebar border border-borderMain text-textMain px-3 py-2 rounded shadow-lg hover:bg-bgHover z-50 text-xs font-bold">
-                <i class="fa-solid fa-arrow-left mr-2"></i> Back
+            <button id="btn-close-graph" class="absolute top-4 left-4 bg-white dark:bg-gray-800 border border-borderMain text-textMain px-4 py-2 rounded shadow-lg hover:bg-bgHover z-50 text-sm font-bold flex items-center">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Editor
             </button>
         </div>
 
@@ -191,10 +203,10 @@
         let state = {
             notes: [],
             folders: [],
-            selectedIds: new Set(), // Stores IDs of selected notes
+            selectedIds: new Set(),
             activeNoteId: null,
             isGraphOpen: false,
-            theme: localStorage.getItem('nexus_theme') || 'dark'
+            theme: localStorage.getItem('nexus_theme') || 'light' // Default Light
         };
 
         // --- DOM ---
@@ -216,11 +228,14 @@
             loadData();
             
             if (state.notes.length === 0) {
-                createNote('Welcome', '# Welcome to Nexus v2\n\nWe now have:\n- **Folders**: Create folders in the sidebar.\n- **Drag & Drop**: Move notes into folders.\n- **Multi-select**: Hold `Ctrl` to select multiple notes.\n- **Themes**: Toggle Dark/Light mode in the top left.\n');
-            } else if (!state.activeNoteId) {
-                setActiveNote(state.notes[0].id);
+                createNote('Welcome to Nexus', '# Welcome to Nexus\n\nFeatures:\n- **Folders**: Click folder icons to toggle.\n- **Graph**: Now fully interactive with drag/zoom.\n- **Tags**: Use #tags like #ideas or #project to link via tags in the graph.\n\nTry creating a [[New Page]] or add a tag!');
             } else {
-                setActiveNote(state.activeNoteId);
+                // Ensure active note validity
+                if (!state.activeNoteId || !state.notes.find(n => n.id === state.activeNoteId)) {
+                     if(state.notes.length > 0) setActiveNote(state.notes[0].id);
+                } else {
+                    setActiveNote(state.activeNoteId);
+                }
             }
         }
 
@@ -230,24 +245,25 @@
             localStorage.setItem('nexus_theme', theme);
             document.documentElement.className = theme;
             const icon = el.btnTheme.querySelector('i');
-            icon.className = theme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            icon.className = theme === 'dark' ? 'fa-regular fa-moon' : 'fa-regular fa-sun';
         }
 
         el.btnTheme.addEventListener('click', () => {
             applyTheme(state.theme === 'dark' ? 'light' : 'dark');
-            // Redraw graph if open to update colors
             if (state.isGraphOpen) initGraph();
         });
 
-        // --- DATA MANAGEMENT ---
+        // --- DATA ---
         function loadData() {
             const raw = localStorage.getItem('nexus_data_v2');
             if (raw) {
                 const data = JSON.parse(raw);
                 state.notes = data.notes || [];
                 state.folders = data.folders || [];
-                // Legacy migration
-                state.notes.forEach(n => { if(n.folderId === undefined) n.folderId = null; });
+                state.notes.forEach(n => { 
+                    if(n.folderId === undefined) n.folderId = null; 
+                    if(!n.tags) n.tags = [];
+                });
             }
         }
 
@@ -265,7 +281,8 @@
                 id: generateId(),
                 title: title,
                 content: content,
-                folderId: null, // Default to root
+                folderId: null,
+                tags: [],
                 timestamp: Date.now()
             };
             state.notes.unshift(note);
@@ -277,11 +294,7 @@
         function createFolder() {
             const name = prompt("Folder Name:");
             if (name) {
-                state.folders.push({
-                    id: generateId(),
-                    name: name,
-                    isOpen: true
-                });
+                state.folders.push({ id: generateId(), name: name, isOpen: true });
                 saveData();
                 renderTree();
             }
@@ -289,138 +302,91 @@
 
         // --- CORE OPERATIONS ---
         function setActiveNote(id) {
+            const note = state.notes.find(n => n.id === id);
+            if (!note) return;
+
             state.activeNoteId = id;
             state.selectedIds.clear();
             state.selectedIds.add(id);
             
-            const note = state.notes.find(n => n.id === id);
-            if (note) {
-                el.title.value = note.title;
-                el.editor.value = note.content;
-                updatePreview();
-                renderTree();
+            el.title.value = note.title;
+            el.editor.value = note.content;
+            updatePreview();
+            renderTree();
+            
+            if (state.isGraphOpen) {
+                state.isGraphOpen = false;
+                el.graphContainer.style.display = 'none';
             }
         }
 
+        // --- PARSING (WikiLinks & Tags) ---
         function updatePreview() {
             const raw = el.editor.value;
+            let html = marked.parse(raw);
+            
+            // 1. Parse WikiLinks [[Page]]
             const wikiLinkRegex = /\[\[(.*?)\]\]/g;
-            const html = marked.parse(raw).replace(wikiLinkRegex, (match, p1) => {
+            html = html.replace(wikiLinkRegex, (match, p1) => {
                 const exists = state.notes.some(n => n.title.toLowerCase() === p1.toLowerCase());
                 const cls = exists ? 'wikilink' : 'wikilink is-missing';
-                return `<span class="${cls}" onclick="handleWikiLink('${p1.replace(/'/g, "\\'")}')">${p1}</span>`;
+                return `<span class="${cls}" onclick="window.handleWikiLink('${p1.replace(/'/g, "\\'")}')">${p1}</span>`;
             });
+
+            // 2. Parse Tags #tag (exclude inside code blocks simplistic check)
+            // Note: This regex is simple. For complex markdown it might match inside code.
+            // Good enough for a lightweight tool.
+            const tagRegex = /(?<=^|\s)(#[a-zA-Z0-9_]+)/g;
+            const foundTags = new Set();
+            
+            // We extract tags from raw text for data
+            let tagMatch;
+            while ((tagMatch = tagRegex.exec(raw)) !== null) {
+                foundTags.add(tagMatch[0]);
+            }
+
+            // We replace in HTML for display
+            // NOTE: replacing in HTML is risky with regex, but doing it after marked
+            // helps avoid breaking markdown headers, but might break link urls containing #.
+            // Safer approach: Use a custom token in raw before marked.
+            // Simple approach for now: Replace in rendered HTML text nodes.
+            // Let's use the visual highlighting in CSS only for now via simple replace
+            html = html.replace(tagRegex, '<span class="tag-pill">$1</span>');
+
             el.preview.innerHTML = html;
             
-            // Update data
+            // Update Note Data
             const note = state.notes.find(n => n.id === state.activeNoteId);
             if (note) {
                 note.content = raw;
+                note.tags = [...foundTags];
                 note.timestamp = Date.now();
                 saveData();
             }
         }
 
-        function handleWikiLink(title) {
+        // Global handler for onclick attributes
+        window.handleWikiLink = (title) => {
             const target = state.notes.find(n => n.title.toLowerCase() === title.toLowerCase());
             if (target) setActiveNote(target.id);
             else createNote(title, `# ${title}\n\nLinked from another page.`);
-        }
+        };
 
-        function deleteSelection() {
-            if(state.selectedIds.size === 0) return;
-            if(!confirm(`Delete ${state.selectedIds.size} item(s)?`)) return;
-
-            state.notes = state.notes.filter(n => !state.selectedIds.has(n.id));
-            // Check folders too (if we allowed folder selection, implementing simple note deletion for now)
-            
-            if (state.notes.length > 0) setActiveNote(state.notes[0].id);
-            else {
-                el.title.value = "";
-                el.editor.value = "";
-                el.preview.innerHTML = "";
-                state.activeNoteId = null;
-            }
-            saveData();
-            renderTree();
-        }
-
-        // --- SIDEBAR TREE & DRAG DROP ---
-        function toggleFolder(id) {
+        window.toggleFolder = (id) => {
             const f = state.folders.find(f => f.id === id);
             if(f) {
                 f.isOpen = !f.isOpen;
                 saveData();
                 renderTree();
             }
-        }
+        };
 
-        function handleDragStart(e, type, id) {
-            // If dragging something not selected, select it first (unless ctrl is held)
-            if (!state.selectedIds.has(id)) {
-                state.selectedIds.clear();
-                state.selectedIds.add(id);
-                renderTree(); // Update visuals
-            }
-            e.dataTransfer.setData('application/json', JSON.stringify([...state.selectedIds]));
-            e.dataTransfer.effectAllowed = 'move';
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault(); // Necessary to allow dropping
-            const target = e.target.closest('.folder-drop-zone');
-            if (target) target.classList.add('drop-target');
-        }
-
-        function handleDragLeave(e) {
-            const target = e.target.closest('.folder-drop-zone');
-            if (target) target.classList.remove('drop-target');
-        }
-
-        function handleDrop(e, targetFolderId) {
-            e.preventDefault();
-            // Clear visuals
-            document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
-
-            const data = e.dataTransfer.getData('application/json');
-            if (!data) return;
-            
-            const idsToMove = JSON.parse(data);
-            
-            // Move notes
-            state.notes.forEach(n => {
-                if(idsToMove.includes(n.id)) {
-                    n.folderId = targetFolderId;
-                }
-            });
-            
-            saveData();
-            renderTree();
-        }
-
-        function selectItem(e, id) {
-            if (e.ctrlKey || e.metaKey) {
-                // Toggle
-                if (state.selectedIds.has(id)) {
-                    state.selectedIds.delete(id);
-                } else {
-                    state.selectedIds.add(id);
-                }
-            } else {
-                // Single Select
-                setActiveNote(id); // This clears others
-                return;
-            }
-            // Re-render to show selection
-            renderTree();
-        }
-
+        // --- TREE VIEW ---
         function renderTree() {
             const container = el.tree;
             container.innerHTML = '';
             const filter = el.searchInput.value.toLowerCase();
 
-            // Helper to render a note
             const renderNote = (note) => {
                 const isSelected = state.selectedIds.has(note.id);
                 const isActive = note.id === state.activeNoteId;
@@ -429,98 +395,88 @@
                 div.className = `sidebar-item flex items-center px-2 py-1.5 rounded my-0.5 text-textMuted hover:text-textMain transition-colors ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`;
                 div.innerHTML = `<i class="fa-regular fa-file-lines mr-2 w-4 text-center text-xs"></i> <span class="truncate flex-1">${note.title || 'Untitled'}</span>`;
                 
-                div.onclick = (e) => selectItem(e, note.id);
-                div.ondragstart = (e) => handleDragStart(e, 'note', note.id);
-                
+                div.onclick = (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        state.selectedIds.has(note.id) ? state.selectedIds.delete(note.id) : state.selectedIds.add(note.id);
+                    } else {
+                        setActiveNote(note.id);
+                    }
+                    renderTree();
+                };
+                div.ondragstart = (e) => {
+                    if (!state.selectedIds.has(note.id)) { state.selectedIds.clear(); state.selectedIds.add(note.id); }
+                    e.dataTransfer.setData('application/json', JSON.stringify([...state.selectedIds]));
+                };
                 return div;
             };
 
-            // Helper to render folder
             const renderFolder = (folder) => {
                 const notesInFolder = state.notes.filter(n => n.folderId === folder.id && n.title.toLowerCase().includes(filter));
-                if (filter && notesInFolder.length === 0) return null; // Hide empty folders during search
+                if (filter && notesInFolder.length === 0) return null;
 
                 const div = document.createElement('div');
                 div.className = 'mb-1';
                 
-                // Folder Header (Drop Zone)
                 const header = document.createElement('div');
                 header.className = 'folder-drop-zone flex items-center px-2 py-1.5 rounded text-textMain font-semibold cursor-pointer hover:bg-bgHover transition-colors';
-                header.innerHTML = `<i class="fa-solid ${folder.isOpen ? 'fa-folder-open' : 'fa-folder'} mr-2 text-accent w-4 text-center"></i> <span class="truncate">${folder.name}</span>`;
-                header.onclick = () => toggleFolder(folder.id);
+                header.innerHTML = `<i class="fa-solid ${folder.isOpen ? 'fa-folder-open' : 'fa-folder'} mr-2 text-accent w-4 text-center transition-all"></i> <span class="truncate select-none">${folder.name}</span>`;
                 
-                // Drag events for folder
-                header.ondragover = handleDragOver;
-                header.ondragleave = handleDragLeave;
-                header.ondrop = (e) => handleDrop(e, folder.id);
+                // Toggle Logic
+                header.onclick = (e) => {
+                    e.stopPropagation(); // Prevent bubbling issues
+                    window.toggleFolder(folder.id);
+                };
+
+                // Drag Logic
+                header.ondragover = (e) => { e.preventDefault(); header.classList.add('drop-target'); };
+                header.ondragleave = () => header.classList.remove('drop-target');
+                header.ondrop = (e) => {
+                    e.preventDefault();
+                    header.classList.remove('drop-target');
+                    const ids = JSON.parse(e.dataTransfer.getData('application/json') || '[]');
+                    state.notes.forEach(n => { if(ids.includes(n.id)) n.folderId = folder.id; });
+                    saveData(); renderTree();
+                };
 
                 div.appendChild(header);
 
-                // Folder Contents
                 if (folder.isOpen || filter) {
                     const content = document.createElement('div');
                     content.className = 'pl-4 border-l border-borderMain ml-2';
                     notesInFolder.forEach(n => content.appendChild(renderNote(n)));
                     div.appendChild(content);
                 }
-
                 return div;
             };
 
-            // 1. Render Folders
-            state.folders.forEach(f => {
-                const fEl = renderFolder(f);
-                if (fEl) container.appendChild(fEl);
-            });
-
-            // 2. Render Root Notes
+            // Render
+            state.folders.forEach(f => { const el = renderFolder(f); if(el) container.appendChild(el); });
+            
+            // Root notes
             const rootNotes = state.notes.filter(n => n.folderId === null && n.title.toLowerCase().includes(filter));
-            rootNotes.forEach(n => container.appendChild(renderNote(n)));
+            
+            // Root Drop Zone (Invisible but functional for moving back to root)
+            if (rootNotes.length > 0 || state.folders.length > 0) {
+               const rootContainer = document.createElement('div');
+               rootContainer.className = "mt-2 pt-2 border-t border-borderMain folder-drop-zone";
+               rootContainer.ondragover = (e) => e.preventDefault();
+               rootContainer.ondrop = (e) => {
+                   e.preventDefault();
+                   const ids = JSON.parse(e.dataTransfer.getData('application/json') || '[]');
+                   state.notes.forEach(n => { if(ids.includes(n.id)) n.folderId = null; });
+                   saveData(); renderTree();
+               };
+               rootNotes.forEach(n => rootContainer.appendChild(renderNote(n)));
+               container.appendChild(rootContainer);
+            }
         }
 
-        // --- EVENT LISTENERS ---
-        el.title.addEventListener('input', (e) => {
-            const note = state.notes.find(n => n.id === state.activeNoteId);
-            if (note) {
-                note.title = e.target.value;
-                saveData();
-                renderTree();
-            }
-        });
-        
-        el.editor.addEventListener('input', updatePreview);
-        el.searchInput.addEventListener('input', renderTree);
-        document.getElementById('btn-new-page').addEventListener('click', () => createNote());
-        document.getElementById('btn-new-folder').addEventListener('click', createFolder);
-        document.getElementById('btn-delete').addEventListener('click', deleteSelection);
-
-        // Import/Export
-        document.getElementById('btn-export').addEventListener('click', () => {
-            const dataStr = JSON.stringify({ notes: state.notes, folders: state.folders }, null, 2);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `nexus_backup_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-        });
-        document.getElementById('btn-import').addEventListener('click', () => document.getElementById('file-import').click());
-        document.getElementById('file-import').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                localStorage.setItem('nexus_data_v2', ev.target.result);
-                location.reload();
-            };
-            reader.readAsText(file);
-        });
-
-        // --- GRAPH VIEW (Force Directed) ---
-        // Simplified for brevity, re-using logic but with Theme Colors
-        let animationFrameId;
+        // --- GRAPH ENGINE (Fixed Interaction) ---
         let ctx = el.graphCanvas.getContext('2d');
         let transform = { x: 0, y: 0, k: 1 };
-        let graphNodes = [], graphLinks = [];
+        let nodes = [], links = [];
+        let isDragging = false, dragStart = { x: 0, y: 0 }, draggedNode = null;
+        let animationFrameId;
 
         function initGraph() {
             const w = el.graphContainer.offsetWidth;
@@ -528,87 +484,209 @@
             el.graphCanvas.width = w;
             el.graphCanvas.height = h;
             
-            graphNodes = state.notes.map(n => ({
-                id: n.id, title: n.title,
-                x: Math.random() * w, y: Math.random() * h,
-                vx: 0, vy: 0
+            // 1. Create Nodes from Notes
+            nodes = state.notes.map(n => ({
+                id: n.id, 
+                label: n.title, 
+                type: 'note',
+                x: Math.random() * w, y: Math.random() * h, 
+                vx: 0, vy: 0,
+                radius: 6
             }));
 
-            graphLinks = [];
-            state.notes.forEach(src => {
-                const regex = /\[\[(.*?)\]\]/g;
-                let match;
-                while ((match = regex.exec(src.content)) !== null) {
-                    const target = state.notes.find(n => n.title.toLowerCase() === match[1].toLowerCase());
-                    if (target) graphLinks.push({ source: src.id, target: target.id });
-                }
-            });
+            // 2. Create Nodes from Tags
+            const allTags = new Set();
+            state.notes.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
             
+            allTags.forEach(tag => {
+                nodes.push({
+                    id: `tag_${tag}`,
+                    label: tag,
+                    type: 'tag',
+                    x: Math.random() * w, y: Math.random() * h,
+                    vx: 0, vy: 0,
+                    radius: 4
+                });
+            });
+
+            // 3. Create Links
+            links = [];
+            state.notes.forEach(src => {
+                // WikiLinks
+                const wikiRegex = /\[\[(.*?)\]\]/g;
+                let match;
+                while ((match = wikiRegex.exec(src.content)) !== null) {
+                    const target = state.notes.find(n => n.title.toLowerCase() === match[1].toLowerCase());
+                    if (target) links.push({ source: src.id, target: target.id });
+                }
+                // Tag Links
+                (src.tags || []).forEach(tag => {
+                    links.push({ source: src.id, target: `tag_${tag}` });
+                });
+            });
+
             transform.x = w/2; transform.y = h/2;
             animateGraph();
         }
 
         function animateGraph() {
             if(!state.isGraphOpen) return;
-            
-            // Physics
-            graphNodes.forEach(a => {
-                graphNodes.forEach(b => {
-                    if(a === b) return;
-                    let dx = b.x - a.x, dy = b.y - a.y;
-                    let dist = Math.sqrt(dx*dx + dy*dy) || 1;
-                    if(dist < 200) {
-                        let f = 200 / (dist*dist);
-                        a.vx -= (dx/dist)*f; a.vy -= (dy/dist)*f;
-                    }
-                });
-                a.vx *= 0.9; a.vy *= 0.9;
-                a.x += a.vx; a.y += a.vy;
-            });
 
-            graphLinks.forEach(l => {
-                let s = graphNodes.find(n => n.id === l.source);
-                let t = graphNodes.find(n => n.id === l.target);
+            // Physics
+            const repulsion = 800;
+            const spring = 0.005;
+            
+            for (let i=0; i<nodes.length; i++) {
+                for (let j=i+1; j<nodes.length; j++) {
+                    let dx = nodes[j].x - nodes[i].x;
+                    let dy = nodes[j].y - nodes[i].y;
+                    let d2 = dx*dx + dy*dy + 0.1;
+                    if (d2 < 100000) {
+                        let f = repulsion / d2;
+                        let fx = (dx / Math.sqrt(d2)) * f;
+                        let fy = (dy / Math.sqrt(d2)) * f;
+                        nodes[j].vx += fx; nodes[j].vy += fy;
+                        nodes[i].vx -= fx; nodes[i].vy -= fy;
+                    }
+                }
+            }
+
+            links.forEach(l => {
+                let s = nodes.find(n => n.id === l.source);
+                let t = nodes.find(n => n.id === l.target);
                 if(s && t) {
                     let dx = t.x - s.x, dy = t.y - s.y;
-                    s.vx += dx * 0.005; s.vy += dy * 0.005;
-                    t.vx -= dx * 0.005; t.vy -= dy * 0.005;
+                    s.vx += dx * spring; s.vy += dy * spring;
+                    t.vx -= dx * spring; t.vy -= dy * spring;
                 }
             });
 
-            // Draw
+            // Apply Velocity
+            nodes.forEach(n => {
+                if (n !== draggedNode) {
+                    n.x += n.vx; n.y += n.vy;
+                    n.x -= n.x * 0.002; n.y -= n.y * 0.002; // Gravity to center
+                }
+                n.vx *= 0.85; n.vy *= 0.85; // Friction
+            });
+
+            drawGraph();
+            animationFrameId = requestAnimationFrame(animateGraph);
+        }
+
+        function drawGraph() {
             ctx.clearRect(0, 0, el.graphCanvas.width, el.graphCanvas.height);
             ctx.save();
             ctx.translate(transform.x, transform.y);
             ctx.scale(transform.k, transform.k);
 
-            const style = getComputedStyle(document.body);
-            const colorLine = style.getPropertyValue('--text-muted').trim();
-            const colorNode = style.getPropertyValue('--text-main').trim();
-            const colorAccent = style.getPropertyValue('--accent').trim();
+            const styles = getComputedStyle(document.body);
+            const cLine = styles.getPropertyValue('--text-muted').trim();
+            const cNode = styles.getPropertyValue('--text-main').trim();
+            const cAccent = styles.getPropertyValue('--accent').trim();
+            const cTag = styles.getPropertyValue('--tag-color').trim();
 
-            ctx.strokeStyle = colorLine;
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = cLine;
             ctx.beginPath();
-            graphLinks.forEach(l => {
-                let s = graphNodes.find(n => n.id === l.source);
-                let t = graphNodes.find(n => n.id === l.target);
+            links.forEach(l => {
+                let s = nodes.find(n => n.id === l.source);
+                let t = nodes.find(n => n.id === l.target);
                 if(s && t) { ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y); }
             });
             ctx.stroke();
 
-            graphNodes.forEach(n => {
-                ctx.fillStyle = n.id === state.activeNoteId ? colorAccent : '#6b7280';
+            nodes.forEach(n => {
                 ctx.beginPath();
-                ctx.arc(n.x, n.y, 5, 0, Math.PI*2);
+                ctx.arc(n.x, n.y, n.radius, 0, Math.PI*2);
+                
+                if (n.type === 'tag') ctx.fillStyle = cTag;
+                else if (n.id === state.activeNoteId) ctx.fillStyle = cAccent;
+                else ctx.fillStyle = '#9ca3af';
+                
                 ctx.fill();
-                ctx.fillStyle = colorNode;
-                ctx.font = '10px Inter';
-                ctx.fillText(n.title, n.x, n.y + 15);
+
+                ctx.fillStyle = cNode;
+                ctx.font = (n.type==='tag' ? 'italic 8px' : '10px') + ' Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(n.label, n.x, n.y + n.radius + 12);
             });
             ctx.restore();
-            animationFrameId = requestAnimationFrame(animateGraph);
         }
 
+        // --- GRAPH EVENTS ---
+        el.graphCanvas.addEventListener('mousedown', e => {
+            const rect = el.graphCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left - transform.x) / transform.k;
+            const y = (e.clientY - rect.top - transform.y) / transform.k;
+            
+            draggedNode = nodes.find(n => {
+                let dx = n.x - x, dy = n.y - y;
+                return dx*dx + dy*dy < 100; // Hit radius
+            });
+
+            if(draggedNode) {
+                isDragging = true;
+                dragStart = { x: e.clientX, y: e.clientY, isClick: true };
+            } else {
+                isDragging = true;
+                dragStart = { x: e.clientX, y: e.clientY, isClick: false };
+            }
+        });
+
+        el.graphCanvas.addEventListener('mousemove', e => {
+            if(!isDragging) return;
+            
+            if(draggedNode) {
+                dragStart.isClick = false;
+                const rect = el.graphCanvas.getBoundingClientRect();
+                draggedNode.x = (e.clientX - rect.left - transform.x) / transform.k;
+                draggedNode.y = (e.clientY - rect.top - transform.y) / transform.k;
+                draggedNode.vx = 0; draggedNode.vy = 0;
+            } else {
+                transform.x += e.clientX - dragStart.x;
+                transform.y += e.clientY - dragStart.y;
+                dragStart.x = e.clientX; dragStart.y = e.clientY;
+            }
+        });
+
+        el.graphCanvas.addEventListener('mouseup', () => {
+            if(draggedNode && dragStart.isClick) {
+                // It was a click on a node
+                if(draggedNode.type === 'note') {
+                    setActiveNote(draggedNode.id);
+                }
+            }
+            isDragging = false;
+            draggedNode = null;
+        });
+
+        el.graphCanvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            const s = 0.001;
+            const d = -e.deltaY * s;
+            const newK = Math.min(Math.max(0.1, transform.k + d), 5);
+            transform.k = newK;
+        });
+
+        // --- UI EVENTS ---
+        el.title.addEventListener('input', (e) => {
+            const note = state.notes.find(n => n.id === state.activeNoteId);
+            if (note) { note.title = e.target.value; saveData(); renderTree(); }
+        });
+        el.editor.addEventListener('input', updatePreview);
+        el.searchInput.addEventListener('input', renderTree);
+        
+        document.getElementById('btn-new-page').addEventListener('click', () => createNote());
+        document.getElementById('btn-new-folder').addEventListener('click', createFolder);
+        document.getElementById('btn-delete').addEventListener('click', () => {
+             if(state.selectedIds.size === 0) return;
+             if(!confirm("Delete selected?")) return;
+             state.notes = state.notes.filter(n => !state.selectedIds.has(n.id));
+             saveData(); 
+             if(state.notes.length > 0) setActiveNote(state.notes[0].id);
+             else { el.title.value=''; el.editor.value=''; el.preview.innerHTML=''; }
+        });
         document.getElementById('btn-toggle-view').addEventListener('click', () => {
             state.isGraphOpen = true;
             el.graphContainer.style.display = 'block';
