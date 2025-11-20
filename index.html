@@ -105,6 +105,11 @@
             font-size: 0.9em;
             font-weight: 500;
             margin-right: 2px;
+            cursor: pointer;
+        }
+        .tag-pill:hover {
+            background: rgba(16, 185, 129, 0.2);
+            text-decoration: underline;
         }
 
         /* Sidebar */
@@ -116,6 +121,15 @@
         .drop-target { border: 2px dashed var(--accent); background-color: rgba(139, 92, 246, 0.1); }
 
         #graph-container { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-main); z-index: 40; }
+        
+        /* Graph Controls */
+        .graph-controls {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-main);
+            border-radius: 8px;
+            padding: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body class="flex h-screen w-screen overflow-hidden">
@@ -186,14 +200,32 @@
         <!-- Graph -->
         <div id="graph-container">
             <canvas id="graph-canvas"></canvas>
-            <div class="absolute top-4 right-4 bg-bgSidebar border border-borderMain p-2 rounded text-xs text-textMuted shadow-lg">
+            
+            <!-- Left Controls -->
+            <div class="absolute top-4 left-4 flex flex-col gap-2">
+                 <button id="btn-close-graph" class="bg-white dark:bg-gray-800 border border-borderMain text-textMain px-4 py-2 rounded shadow-lg hover:bg-bgHover text-sm font-bold flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to Editor
+                </button>
+                <div id="graph-filter-status" class="hidden bg-accent text-white px-3 py-2 rounded shadow-lg text-xs flex items-center justify-between">
+                    <span>Filter: <b id="filter-tag-name"></b></span>
+                    <button onclick="clearGraphFilter()" class="ml-2 hover:text-gray-200"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <!-- Right Controls -->
+            <div class="absolute top-4 right-4 graph-controls flex flex-col gap-2 text-xs text-textMuted">
+                <label class="flex items-center cursor-pointer hover:text-textMain">
+                    <input type="checkbox" id="chk-show-tags" class="mr-2 accent-emerald-500" checked> 
+                    Show Tags
+                </label>
+                <label class="flex items-center cursor-pointer hover:text-textMain">
+                    <input type="checkbox" id="chk-freeze-graph" class="mr-2 accent-purple-500"> 
+                    Freeze Nodes
+                </label>
+                <div class="h-px bg-borderMain my-1"></div>
                 <p><i class="fa-solid fa-hand-pointer mr-1"></i> Drag nodes</p>
                 <p><i class="fa-solid fa-magnifying-glass mr-1"></i> Scroll to zoom</p>
-                <p><i class="fa-solid fa-arrow-pointer mr-1"></i> Click to open</p>
             </div>
-            <button id="btn-close-graph" class="absolute top-4 left-4 bg-white dark:bg-gray-800 border border-borderMain text-textMain px-4 py-2 rounded shadow-lg hover:bg-bgHover z-50 text-sm font-bold flex items-center">
-                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Editor
-            </button>
         </div>
 
     </main>
@@ -206,7 +238,11 @@
             selectedIds: new Set(),
             activeNoteId: null,
             isGraphOpen: false,
-            theme: localStorage.getItem('nexus_theme') || 'light' // Default Light
+            theme: localStorage.getItem('nexus_theme') || 'light',
+            // Graph specific settings
+            graphShowTags: true,
+            graphFilterTag: null,
+            graphFrozen: false
         };
 
         // --- DOM ---
@@ -219,7 +255,12 @@
             graphCanvas: document.getElementById('graph-canvas'),
             searchInput: document.getElementById('search-input'),
             btnTheme: document.getElementById('btn-theme'),
-            saveStatus: document.getElementById('save-status')
+            saveStatus: document.getElementById('save-status'),
+            // Graph UI
+            chkShowTags: document.getElementById('chk-show-tags'),
+            chkFreezeGraph: document.getElementById('chk-freeze-graph'),
+            filterStatus: document.getElementById('graph-filter-status'),
+            filterTagName: document.getElementById('filter-tag-name')
         };
 
         // --- INIT ---
@@ -228,9 +269,8 @@
             loadData();
             
             if (state.notes.length === 0) {
-                createNote('Welcome to Nexus', '# Welcome to Nexus\n\nFeatures:\n- **Folders**: Click folder icons to toggle.\n- **Graph**: Now fully interactive with drag/zoom.\n- **Tags**: Use #tags like #ideas or #project to link via tags in the graph.\n\nTry creating a [[New Page]] or add a tag!');
+                createNote('Welcome to Nexus', '# Welcome to Nexus\n\nFeatures:\n- **Folders**: Click folder icons to toggle.\n- **Graph**: Now fully interactive with drag/zoom.\n- **Tags**: Click #tags (like #ideas) to filter the graph view.\n\nTry creating a [[New Page]] or add a tag!');
             } else {
-                // Ensure active note validity
                 if (!state.activeNoteId || !state.notes.find(n => n.id === state.activeNoteId)) {
                      if(state.notes.length > 0) setActiveNote(state.notes[0].id);
                 } else {
@@ -333,25 +373,19 @@
                 return `<span class="${cls}" onclick="window.handleWikiLink('${p1.replace(/'/g, "\\'")}')">${p1}</span>`;
             });
 
-            // 2. Parse Tags #tag (exclude inside code blocks simplistic check)
-            // Note: This regex is simple. For complex markdown it might match inside code.
-            // Good enough for a lightweight tool.
+            // 2. Parse Tags #tag
             const tagRegex = /(?<=^|\s)(#[a-zA-Z0-9_]+)/g;
             const foundTags = new Set();
             
-            // We extract tags from raw text for data
             let tagMatch;
             while ((tagMatch = tagRegex.exec(raw)) !== null) {
                 foundTags.add(tagMatch[0]);
             }
 
-            // We replace in HTML for display
-            // NOTE: replacing in HTML is risky with regex, but doing it after marked
-            // helps avoid breaking markdown headers, but might break link urls containing #.
-            // Safer approach: Use a custom token in raw before marked.
-            // Simple approach for now: Replace in rendered HTML text nodes.
-            // Let's use the visual highlighting in CSS only for now via simple replace
-            html = html.replace(tagRegex, '<span class="tag-pill">$1</span>');
+            // Replace with Clickable Pill
+            html = html.replace(tagRegex, (match) => {
+                return `<span class="tag-pill" onclick="window.handleTagClick('${match}')">${match}</span>`;
+            });
 
             el.preview.innerHTML = html;
             
@@ -365,11 +399,24 @@
             }
         }
 
-        // Global handler for onclick attributes
+        // Global Handlers
         window.handleWikiLink = (title) => {
             const target = state.notes.find(n => n.title.toLowerCase() === title.toLowerCase());
             if (target) setActiveNote(target.id);
             else createNote(title, `# ${title}\n\nLinked from another page.`);
+        };
+
+        window.handleTagClick = (tagName) => {
+            state.graphFilterTag = tagName;
+            // Force graph open
+            state.isGraphOpen = true;
+            el.graphContainer.style.display = 'block';
+            initGraph();
+        };
+        
+        window.clearGraphFilter = () => {
+            state.graphFilterTag = null;
+            initGraph();
         };
 
         window.toggleFolder = (id) => {
@@ -421,13 +468,7 @@
                 header.className = 'folder-drop-zone flex items-center px-2 py-1.5 rounded text-textMain font-semibold cursor-pointer hover:bg-bgHover transition-colors';
                 header.innerHTML = `<i class="fa-solid ${folder.isOpen ? 'fa-folder-open' : 'fa-folder'} mr-2 text-accent w-4 text-center transition-all"></i> <span class="truncate select-none">${folder.name}</span>`;
                 
-                // Toggle Logic
-                header.onclick = (e) => {
-                    e.stopPropagation(); // Prevent bubbling issues
-                    window.toggleFolder(folder.id);
-                };
-
-                // Drag Logic
+                header.onclick = (e) => { e.stopPropagation(); window.toggleFolder(folder.id); };
                 header.ondragover = (e) => { e.preventDefault(); header.classList.add('drop-target'); };
                 header.ondragleave = () => header.classList.remove('drop-target');
                 header.ondrop = (e) => {
@@ -449,13 +490,9 @@
                 return div;
             };
 
-            // Render
             state.folders.forEach(f => { const el = renderFolder(f); if(el) container.appendChild(el); });
-            
-            // Root notes
             const rootNotes = state.notes.filter(n => n.folderId === null && n.title.toLowerCase().includes(filter));
             
-            // Root Drop Zone (Invisible but functional for moving back to root)
             if (rootNotes.length > 0 || state.folders.length > 0) {
                const rootContainer = document.createElement('div');
                rootContainer.className = "mt-2 pt-2 border-t border-borderMain folder-drop-zone";
@@ -471,12 +508,19 @@
             }
         }
 
-        // --- GRAPH ENGINE (Fixed Interaction) ---
+        // --- GRAPH ENGINE (With Filters & Freeze) ---
         let ctx = el.graphCanvas.getContext('2d');
         let transform = { x: 0, y: 0, k: 1 };
         let nodes = [], links = [];
         let isDragging = false, dragStart = { x: 0, y: 0 }, draggedNode = null;
         let animationFrameId;
+        
+        // UI Listeners
+        el.chkShowTags.addEventListener('change', (e) => { state.graphShowTags = e.target.checked; initGraph(); });
+        el.chkFreezeGraph.addEventListener('change', (e) => { 
+            state.graphFrozen = e.target.checked; 
+            if(!state.graphFrozen) animateGraph(); // Resume
+        });
 
         function initGraph() {
             const w = el.graphContainer.offsetWidth;
@@ -484,58 +528,102 @@
             el.graphCanvas.width = w;
             el.graphCanvas.height = h;
             
-            // 1. Create Nodes from Notes
-            nodes = state.notes.map(n => ({
-                id: n.id, 
-                label: n.title, 
-                type: 'note',
+            // Reset Freeze on init usually implies movement reset, but let's keep user preference
+            // if manual freeze is on, we don't simulate.
+
+            // Update Filter UI
+            if(state.graphFilterTag) {
+                el.filterStatus.classList.remove('hidden');
+                el.filterTagName.innerText = state.graphFilterTag;
+            } else {
+                el.filterStatus.classList.add('hidden');
+            }
+
+            // 1. Filter Sources
+            let activeNotes = state.notes;
+            if (state.graphFilterTag) {
+                // Show only notes containing the tag
+                activeNotes = state.notes.filter(n => n.tags.includes(state.graphFilterTag));
+            }
+
+            // 2. Create Nodes
+            nodes = activeNotes.map(n => ({
+                id: n.id, label: n.title, type: 'note',
                 x: Math.random() * w, y: Math.random() * h, 
-                vx: 0, vy: 0,
-                radius: 6
+                vx: 0, vy: 0, radius: 6
             }));
 
-            // 2. Create Nodes from Tags
-            const allTags = new Set();
-            state.notes.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
-            
-            allTags.forEach(tag => {
-                nodes.push({
-                    id: `tag_${tag}`,
-                    label: tag,
-                    type: 'tag',
-                    x: Math.random() * w, y: Math.random() * h,
-                    vx: 0, vy: 0,
-                    radius: 4
-                });
-            });
+            // 3. Add Tags (if enabled)
+            // If filtering by a specific tag, ALWAYS show that tag node.
+            // If not filtering, check checkbox.
+            const shouldShowTags = state.graphShowTags || state.graphFilterTag;
 
-            // 3. Create Links
+            if (shouldShowTags) {
+                const allTags = new Set();
+                
+                // Gather tags only from active notes to keep graph clean
+                activeNotes.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
+                
+                allTags.forEach(tag => {
+                    // If filtering, only show the filter tag (optional design choice, but safer to show all related)
+                    // Let's show all tags that appear in the filtered notes, 
+                    // BUT if we are strictly filtering, maybe only the relevant one?
+                    // Let's show all tags connected to these visible notes for context.
+                    
+                    // Check if this tag should be visible
+                    // If filtering: Show specific tag OR show all? 
+                    // User asked: "show a graph view with nodes that with that tag only"
+                    // Usually this means Central Tag Node <-> Note 1, Note 2...
+                    
+                    if (state.graphFilterTag && tag !== state.graphFilterTag) {
+                         // If we are in filter mode, do we hide other tags?
+                         // Let's keep it simple: Only show the specific tag node we filtered by?
+                         // Or show others? Let's show only the filter tag to reduce noise.
+                         return;
+                    }
+                    
+                    nodes.push({
+                        id: `tag_${tag}`, label: tag, type: 'tag',
+                        x: Math.random() * w, y: Math.random() * h,
+                        vx: 0, vy: 0, radius: 4
+                    });
+                });
+            }
+
+            // 4. Create Links
             links = [];
-            state.notes.forEach(src => {
-                // WikiLinks
+            activeNotes.forEach(src => {
+                // Link to other visible notes
                 const wikiRegex = /\[\[(.*?)\]\]/g;
                 let match;
                 while ((match = wikiRegex.exec(src.content)) !== null) {
-                    const target = state.notes.find(n => n.title.toLowerCase() === match[1].toLowerCase());
+                    const target = activeNotes.find(n => n.title.toLowerCase() === match[1].toLowerCase());
                     if (target) links.push({ source: src.id, target: target.id });
                 }
-                // Tag Links
-                (src.tags || []).forEach(tag => {
-                    links.push({ source: src.id, target: `tag_${tag}` });
-                });
+                // Link to Tags
+                if (shouldShowTags) {
+                    (src.tags || []).forEach(tag => {
+                        // Only link if tag node exists (filtered logic above)
+                        if(nodes.find(n => n.id === `tag_${tag}`)) {
+                            links.push({ source: src.id, target: `tag_${tag}` });
+                        }
+                    });
+                }
             });
 
             transform.x = w/2; transform.y = h/2;
-            animateGraph();
+            if (!state.graphFrozen) animateGraph();
+            else drawGraph();
         }
 
         function animateGraph() {
-            if(!state.isGraphOpen) return;
+            if(!state.isGraphOpen || state.graphFrozen) return;
 
-            // Physics
-            const repulsion = 800;
+            const repulsion = 500;
             const spring = 0.005;
+            let totalEnergy = 0;
             
+            // Physics Calc
             for (let i=0; i<nodes.length; i++) {
                 for (let j=i+1; j<nodes.length; j++) {
                     let dx = nodes[j].x - nodes[i].x;
@@ -561,16 +649,25 @@
                 }
             });
 
-            // Apply Velocity
+            // Update & Damping
             nodes.forEach(n => {
                 if (n !== draggedNode) {
                     n.x += n.vx; n.y += n.vy;
-                    n.x -= n.x * 0.002; n.y -= n.y * 0.002; // Gravity to center
+                    n.x -= n.x * 0.0015; n.y -= n.y * 0.0015; // Gentle gravity center
                 }
-                n.vx *= 0.85; n.vy *= 0.85; // Friction
+                n.vx *= 0.80; n.vy *= 0.80; // Higher damping to settle faster
+                totalEnergy += Math.abs(n.vx) + Math.abs(n.vy);
             });
 
             drawGraph();
+
+            // Auto-freeze if energy is low
+            if (totalEnergy < 0.2 && !isDragging) {
+                // Stop loop, but don't check the freeze box
+                // Just stop calling requestAnimationFrame
+                return; 
+            }
+            
             animationFrameId = requestAnimationFrame(animateGraph);
         }
 
@@ -614,7 +711,7 @@
             ctx.restore();
         }
 
-        // --- GRAPH EVENTS ---
+        // --- EVENTS ---
         el.graphCanvas.addEventListener('mousedown', e => {
             const rect = el.graphCanvas.getBoundingClientRect();
             const x = (e.clientX - rect.left - transform.x) / transform.k;
@@ -622,12 +719,13 @@
             
             draggedNode = nodes.find(n => {
                 let dx = n.x - x, dy = n.y - y;
-                return dx*dx + dy*dy < 100; // Hit radius
+                return dx*dx + dy*dy < 100; 
             });
 
             if(draggedNode) {
                 isDragging = true;
                 dragStart = { x: e.clientX, y: e.clientY, isClick: true };
+                if(!state.graphFrozen) animateGraph(); // Wake up physics
             } else {
                 isDragging = true;
                 dragStart = { x: e.clientX, y: e.clientY, isClick: false };
@@ -643,19 +741,18 @@
                 draggedNode.x = (e.clientX - rect.left - transform.x) / transform.k;
                 draggedNode.y = (e.clientY - rect.top - transform.y) / transform.k;
                 draggedNode.vx = 0; draggedNode.vy = 0;
+                if(!state.graphFrozen) animateGraph(); // Keep waking
             } else {
                 transform.x += e.clientX - dragStart.x;
                 transform.y += e.clientY - dragStart.y;
                 dragStart.x = e.clientX; dragStart.y = e.clientY;
+                drawGraph(); // Just redraw, no physics needed for pan
             }
         });
 
         el.graphCanvas.addEventListener('mouseup', () => {
             if(draggedNode && dragStart.isClick) {
-                // It was a click on a node
-                if(draggedNode.type === 'note') {
-                    setActiveNote(draggedNode.id);
-                }
+                if(draggedNode.type === 'note') setActiveNote(draggedNode.id);
             }
             isDragging = false;
             draggedNode = null;
@@ -667,9 +764,9 @@
             const d = -e.deltaY * s;
             const newK = Math.min(Math.max(0.1, transform.k + d), 5);
             transform.k = newK;
+            drawGraph();
         });
 
-        // --- UI EVENTS ---
         el.title.addEventListener('input', (e) => {
             const note = state.notes.find(n => n.id === state.activeNoteId);
             if (note) { note.title = e.target.value; saveData(); renderTree(); }
@@ -690,6 +787,7 @@
         document.getElementById('btn-toggle-view').addEventListener('click', () => {
             state.isGraphOpen = true;
             el.graphContainer.style.display = 'block';
+            state.graphFilterTag = null; // Reset filter on general open
             initGraph();
         });
         document.getElementById('btn-close-graph').addEventListener('click', () => {
@@ -697,7 +795,6 @@
             el.graphContainer.style.display = 'none';
         });
 
-        // Start
         init();
 
     </script>
