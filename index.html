@@ -70,9 +70,10 @@
         ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 4px; }
 
         /* Editor Typography */
-        .markdown-preview { font-size: 0.95rem; }
+        .markdown-preview { font-size: 0.95rem; padding-bottom: 3rem; }
         .markdown-preview h1 { font-size: 2em; font-weight: bold; margin-bottom: 0.5em; color: var(--text-main); border-bottom: 1px solid var(--border-main); padding-bottom: 0.3em; }
         .markdown-preview h2 { font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; color: var(--text-main); }
+        .markdown-preview h3 { font-size: 1.25em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
         .markdown-preview p { margin-bottom: 1em; line-height: 1.6; }
         .markdown-preview ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
         .markdown-preview ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1em; }
@@ -89,12 +90,15 @@
         .markdown-preview tr:nth-child(even) { background-color: var(--bg-hover); }
 
         /* Task Lists */
-        .markdown-preview input[type="checkbox"] { margin-right: 0.5em; cursor: pointer; }
+        .markdown-preview input[type="checkbox"] { margin-right: 0.5em; cursor: pointer; appearance: none; -webkit-appearance: none; width: 1.1em; height: 1.1em; border: 1px solid var(--text-muted); border-radius: 3px; position: relative; top: 3px; background: var(--bg-main); }
+        .markdown-preview input[type="checkbox"]:checked { background-color: var(--accent); border-color: var(--accent); }
+        .markdown-preview input[type="checkbox"]:checked::after { content: '✔'; position: absolute; top: -2px; left: 1px; color: white; font-size: 0.8em; }
         .markdown-preview li.task-list-item { list-style-type: none; margin-left: -1.5em; }
 
         .wikilink { color: var(--accent); cursor: pointer; background: rgba(139, 92, 246, 0.1); padding: 0 4px; border-radius: 4px; font-weight: 500; }
         .wikilink.is-missing { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
         .tag-pill { color: var(--tag-color); background: rgba(16, 185, 129, 0.1); padding: 0 6px; border-radius: 12px; font-size: 0.8em; font-weight: 500; cursor: pointer; margin-right: 2px; display: inline-block;}
+        .tag-pill:hover { background: rgba(16, 185, 129, 0.2); }
 
         /* Sidebar & Common */
         .sidebar-item:hover { background-color: var(--bg-hover); }
@@ -120,25 +124,39 @@
         .wb-card:active { cursor: grabbing; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); }
         .wb-header { padding: 10px; border-bottom: 1px solid var(--border-main); font-weight: bold; font-size: 0.9rem; cursor: grab; display:flex; justify-content:space-between; align-items:center; background: var(--bg-sidebar); border-radius: 8px 8px 0 0; }
         .wb-body { padding: 12px; font-size: 0.8rem; height: 140px; overflow: hidden; color: var(--text-muted); pointer-events: none; line-height: 1.5; }
-        .wb-footer { padding: 8px 12px; border-top: 1px solid var(--border-main); display: flex; justify-content: space-between; align-items: center; background: var(--bg-item); border-radius: 0 0 8px 8px; }
-        .wb-status-badge { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg-hover); color: var(--text-muted); padding: 2px 6px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border-main); }
+        .wb-footer { padding: 8px 12px; border-top: 1px solid var(--border-main); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--bg-item); border-radius: 0 0 8px 8px; min-height: 36px; }
+        .wb-status-badge { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg-hover); color: var(--text-muted); padding: 2px 6px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border-main); flex-shrink: 0; }
         .wb-status-badge:hover { background: var(--border-main); color: var(--text-main); }
 
         /* Kanban */
-        .kanban-container { display: flex; height: 100%; gap: 16px; overflow-x: auto; padding: 24px; }
-        .kanban-col { background: var(--bg-sidebar); min-width: 280px; width: 280px; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; height: 100%; flex-shrink: 0; border: 1px solid var(--border-main); }
-        .kanban-header { font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
-        .kanban-list { flex: 1; overflow-y: auto; min-height: 50px; }
-        .kanban-card { background: var(--bg-item); border: 1px solid var(--border-main); padding: 12px; border-radius: 6px; margin-bottom: 8px; cursor: grab; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .kanban-container { display: flex; gap: 16px; padding: 24px; align-items: flex-start; transform-origin: 0 0; width: max-content; min-width: 100%; }
+        /* Kanban Layouts */
+        .kanban-container.layout-row { flex-direction: row; }
+        .kanban-container.layout-col { flex-direction: column; width: 600px; }
+        
+        .kanban-col { background: var(--bg-sidebar); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; flex-shrink: 0; border: 1px solid var(--border-main); transition: all 0.2s; }
+        
+        .kanban-container.layout-row .kanban-col { min-width: 300px; width: 300px; }
+        .kanban-container.layout-col .kanban-col { width: 100%; margin-bottom: 16px; }
+
+        .kanban-header { font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); cursor: grab; user-select: none; }
+        .kanban-header:active { cursor: grabbing; }
+        
+        .kanban-list { display: flex; gap: 8px; min-height: 50px; }
+        .kanban-list.items-col { flex-direction: column; }
+        .kanban-list.items-row { flex-direction: row; flex-wrap: wrap; }
+
+        .kanban-card { background: var(--bg-item); border: 1px solid var(--border-main); padding: 12px; border-radius: 6px; cursor: grab; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .kanban-list.items-col .kanban-card { width: 100%; }
+        .kanban-list.items-row .kanban-card { width: 220px; height: 120px; overflow: hidden; }
         .kanban-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .kanban-add-btn { margin-top: auto; padding-top: 8px; text-align: center; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; }
-        .kanban-add-btn:hover { color: var(--accent); }
+        .kanban-drop-zone { min-height: 50px; height: 100%; }
 
         /* Views Management */
         .view-section { display: none; height: 100%; width: 100%; }
         .view-section.active { display: block; }
-        /* Fix Editor Flex */
         #view-editor.active { display: flex; }
+        #view-kanban.active { display: flex; }
 
         /* Nav Rail */
         .nav-btn { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; cursor: pointer; margin-bottom: 8px; }
@@ -157,16 +175,23 @@
         <div class="nav-btn" id="nav-kanban" title="Kanban" onclick="switchView('kanban')"><i class="fa-solid fa-list-check"></i></div>
         <div class="nav-btn" id="nav-graph" title="Graph" onclick="switchView('graph')"><i class="fa-solid fa-share-nodes"></i></div>
 
-        <div class="mt-auto">
+        <div class="mt-auto flex flex-col items-center gap-2">
+            <div class="nav-btn" id="btn-export" title="Backup Data"><i class="fa-solid fa-download"></i></div>
+            <input type="file" id="file-import" class="hidden" accept=".json">
+            <div class="nav-btn" id="btn-import" title="Restore Data"><i class="fa-solid fa-upload"></i></div>
+            <div class="nav-btn" onclick="resetData()" title="Reset Demo"><i class="fa-solid fa-arrows-rotate"></i></div>
             <div class="nav-btn" id="btn-theme" title="Theme"><i class="fa-regular fa-sun"></i></div>
         </div>
     </nav>
 
     <!-- Sidebar -->
     <aside id="sidebar-tree" class="w-60 bg-bgSidebar border-r border-borderMain flex flex-col flex-shrink-0 transition-all duration-300">
-        <div class="p-3 border-b border-borderMain">
-            <h2 class="font-bold text-sm text-textMain mb-2">Nexus Core</h2>
-            <input type="text" id="search-input" placeholder="Search..." class="w-full bg-bgMain border border-borderMain rounded px-2 py-1 text-xs focus:outline-none focus:border-accent text-textMain">
+        <div class="p-3 border-b border-borderMain flex flex-col gap-2">
+            <h2 class="font-bold text-sm text-textMain">Nexus Core</h2>
+            <div class="flex flex-col gap-1">
+                <input type="text" id="search-input" placeholder="Search..." class="w-full bg-bgMain border border-borderMain rounded px-2 py-1 text-xs focus:outline-none focus:border-accent text-textMain">
+                <input type="text" id="sidebar-tag-filter" placeholder="Filter tags (e.g. demo, work)" class="w-full bg-bgMain border border-borderMain rounded px-2 py-1 text-xs focus:outline-none focus:border-accent text-textMain">
+            </div>
         </div>
         <div id="file-tree" class="flex-1 overflow-y-auto p-2 space-y-0.5 text-sm"></div>
         <div class="p-2 border-t border-borderMain bg-bgSidebar grid grid-cols-2 gap-2">
@@ -183,8 +208,13 @@
             <header class="h-12 bg-bgSidebar border-b border-borderMain flex items-center justify-between px-4 flex-shrink-0">
                 <input type="text" id="note-title" class="bg-transparent text-lg font-medium focus:outline-none text-textMain w-full" placeholder="Untitled Page">
                 <div class="flex items-center space-x-2 text-xs">
-                    <select id="note-status" class="bg-bgMain border border-borderMain rounded px-2 py-1 text-textMuted focus:border-accent max-w-[100px]">
-                        <!-- Populated via JS -->
+                    <span class="text-textMuted">Board:</span>
+                    <select id="note-board" class="bg-bgMain border border-borderMain rounded px-2 py-1 text-textMuted focus:border-accent max-w-[120px]">
+                        <!-- Populated JS -->
+                    </select>
+                    <span class="text-textMuted">Status:</span>
+                    <select id="note-status" class="bg-bgMain border border-borderMain rounded px-2 py-1 text-textMuted focus:border-accent max-w-[120px]">
+                        <!-- Populated JS -->
                     </select>
                     <button id="btn-toggle-mode" class="text-textMuted hover:text-textMain px-2 py-1 border border-borderMain rounded"><i class="fa-regular fa-eye"></i></button>
                     <span id="save-status" class="text-textMuted w-12 text-right"></span>
@@ -201,9 +231,14 @@
             <div class="absolute inset-0 bg-dot-pattern pointer-events-none z-0"></div>
             <div id="wb-canvas" class="absolute top-0 left-0 transform-origin-0-0" style="transform: translate(0px, 0px) scale(1);"></div>
             
-            <div class="absolute top-4 left-4 bg-bgSidebar/90 backdrop-blur border border-borderMain p-2 rounded shadow text-xs z-50 flex gap-3 items-center">
-               <span class="font-bold text-textMain">Whiteboard</span>
-               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-status" class="mr-1" checked> Show Status</label>
+            <div class="absolute top-4 left-4 bg-bgSidebar/90 backdrop-blur border border-borderMain p-2 rounded shadow text-xs z-50 flex flex-col gap-2">
+               <div class="flex justify-between items-center border-b border-borderMain pb-1 mb-1">
+                   <span class="font-bold text-textMain">Whiteboard</span>
+                   <button onclick="autoArrangeWhiteboard()" class="text-accent hover:text-textMain px-1" title="Auto Arrange Grid"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+               </div>
+               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-status" class="mr-1" checked> Status</label>
+               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-tags" class="mr-1" checked> Tags</label>
+               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-hidden" class="mr-1"> Show Hidden</label>
             </div>
 
             <div class="absolute bottom-4 right-4 bg-bgSidebar/90 backdrop-blur border border-borderMain p-2 rounded shadow text-xs text-textMuted z-50">
@@ -212,12 +247,29 @@
         </div>
 
         <!-- KANBAN VIEW -->
-        <div id="view-kanban" class="view-section overflow-hidden">
-            <div class="flex h-full overflow-x-auto p-6" id="kanban-container">
-                <!-- Columns injected here -->
-                <div class="min-w-[100px] flex items-center justify-center">
-                    <button onclick="addKanbanColumn()" class="bg-bgSidebar hover:bg-bgHover border border-borderMain text-textMuted px-3 py-2 rounded text-sm"><i class="fa-solid fa-plus"></i> Add Status</button>
+        <div id="view-kanban" class="view-section overflow-hidden flex-col relative cursor-grab active:cursor-grabbing">
+            <div class="h-12 bg-bgSidebar border-b border-borderMain flex items-center justify-between px-4 flex-shrink-0 z-20 relative">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-textMain">Board:</span>
+                    <select id="kanban-board-select" class="bg-bgMain border border-borderMain rounded px-2 py-1 text-sm text-textMain focus:border-accent"></select>
+                    <button onclick="addBoard()" class="text-textMuted hover:text-accent px-2"><i class="fa-solid fa-plus"></i></button>
+                    <button onclick="deleteBoard()" class="text-textMuted hover:text-red-500 px-2"><i class="fa-solid fa-trash"></i></button>
+                    <div class="h-4 w-px bg-borderMain mx-1"></div>
+                    <button onclick="toggleKanbanLayout('board')" class="text-textMuted hover:text-textMain px-2" title="Toggle Board Flow"><i class="fa-solid fa-rotate"></i> Board</button>
+                    <button onclick="toggleKanbanLayout('items')" class="text-textMuted hover:text-textMain px-2" title="Toggle Items Flow"><i class="fa-solid fa-table-cells-large"></i> Items</button>
                 </div>
+                <button onclick="addKanbanColumn()" class="bg-accent hover:bg-opacity-90 text-white px-3 py-1.5 rounded text-xs font-bold"><i class="fa-solid fa-plus"></i> New Status</button>
+            </div>
+            
+            <!-- Canvas-like Container -->
+            <div class="absolute inset-0 bg-dot-pattern pointer-events-none z-0 top-12"></div>
+            <div id="kanban-wrapper" class="flex-1 relative overflow-hidden top-0">
+                <div id="kanban-canvas" class="absolute top-0 left-0 transform-origin-0-0 min-h-full" style="transform: translate(0px, 0px) scale(1);">
+                     <div id="kanban-container"></div>
+                </div>
+            </div>
+             <div class="absolute bottom-4 left-4 bg-bgSidebar/90 backdrop-blur border border-borderMain p-2 rounded shadow text-xs text-textMuted z-50">
+                Drag Background to Pan • Ctrl+Scroll to Zoom
             </div>
         </div>
 
@@ -225,8 +277,26 @@
         <div id="view-graph" class="view-section relative">
             <canvas id="graph-canvas" class="block w-full h-full"></canvas>
             <div class="absolute top-4 right-4 bg-bgSidebar border border-borderMain p-3 rounded-lg shadow-lg text-xs flex flex-col gap-2 z-50">
+                <div id="graph-filter-status" class="hidden bg-accent text-white px-2 py-1 rounded flex justify-between mb-2 items-center">
+                    <span id="filter-tag-name" class="mr-2 font-bold"></span>
+                    <button onclick="clearGraphFilter()" class="hover:text-gray-200"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="flex flex-col gap-1 pb-2 border-b border-borderMain mb-2">
+                    <span class="text-textMuted font-bold">Filter Status:</span>
+                    <select id="graph-status-filter" class="bg-bgMain border border-borderMain rounded px-1 py-0.5 text-textMain">
+                        <option value="all">All Statuses</option>
+                    </select>
+                    <span class="text-textMuted font-bold mt-1">Filter Tags:</span>
+                    <input type="text" id="graph-tag-filter" placeholder="e.g. demo, work" class="bg-bgMain border border-borderMain rounded px-1 py-0.5 text-textMain">
+                </div>
                 <label class="flex items-center cursor-pointer text-textMain"><input type="checkbox" id="chk-show-tags" class="mr-2 accent-accent" checked> Show Tags</label>
                 <label class="flex items-center cursor-pointer text-textMain"><input type="checkbox" id="chk-freeze-graph" class="mr-2 accent-accent"> Freeze Nodes</label>
+            </div>
+             <div class="absolute bottom-4 left-4 flex gap-2 z-50">
+                <button onclick="resetGraphView()" class="bg-bgSidebar border border-borderMain p-2 rounded shadow hover:bg-bgHover text-textMain" title="Reset View"><i class="fa-solid fa-crosshairs"></i></button>
+                <div class="bg-bgSidebar border border-borderMain p-2 rounded shadow text-xs text-textMuted pointer-events-none">
+                    Drag node to move • Click node to edit • Pan empty space
+                </div>
             </div>
         </div>
 
@@ -237,13 +307,16 @@
         let state = {
             notes: [],
             folders: [],
-            statuses: ['todo', 'doing', 'done'], // Dynamic statuses
+            boards: [], 
+            activeBoardId: 'default',
             activeNoteId: null,
             currentView: 'editor',
             isEditMode: true,
             theme: localStorage.getItem('nexus_theme') || 'light',
-            wb: { x: 0, y: 0, scale: 1, isPanning: false, lastX: 0, lastY: 0, showStatus: true },
-            graph: { showTags: true, frozen: false }
+            wb: { x: 100, y: 100, scale: 1, isPanning: false, lastX: 0, lastY: 0, showStatus: true, showTags: true, showHidden: false },
+            kanban: { boardLayout: 'row', itemLayout: 'col', x: 0, y: 0, scale: 1, isPanning: false, lastX: 0, lastY: 0 },
+            graph: { showTags: true, frozen: false, filterTag: null, filterStatus: 'all', textFilter: '' },
+            sidebar: { filterText: '' }
         };
 
         // --- DOM ELEMENTS ---
@@ -251,8 +324,10 @@
             navBtns: document.querySelectorAll('.nav-btn'),
             sidebar: document.getElementById('sidebar-tree'),
             views: document.querySelectorAll('.view-section'),
+            sidebarTagFilter: document.getElementById('sidebar-tag-filter'),
             // Editor
             title: document.getElementById('note-title'),
+            noteBoard: document.getElementById('note-board'),
             status: document.getElementById('note-status'),
             editor: document.getElementById('markdown-input'),
             preview: document.getElementById('markdown-preview'),
@@ -262,32 +337,52 @@
             wbCanvas: document.getElementById('wb-canvas'),
             wbContainer: document.getElementById('view-whiteboard'),
             wbShowStatus: document.getElementById('wb-show-status'),
+            wbShowTags: document.getElementById('wb-show-tags'),
+            wbShowHidden: document.getElementById('wb-show-hidden'),
             // Kanban
+            kanbanWrapper: document.getElementById('kanban-wrapper'),
+            kanbanCanvas: document.getElementById('kanban-canvas'),
             kanbanContainer: document.getElementById('kanban-container'),
+            kanbanBoardSelect: document.getElementById('kanban-board-select'),
             // Graph
             graphCanvas: document.getElementById('graph-canvas'),
             chkTags: document.getElementById('chk-show-tags'),
-            chkFreeze: document.getElementById('chk-freeze-graph')
+            chkFreeze: document.getElementById('chk-freeze-graph'),
+            graphFilterStatus: document.getElementById('graph-filter-status'),
+            filterTagName: document.getElementById('filter-tag-name'),
+            graphStatusSelect: document.getElementById('graph-status-filter'),
+            graphTagFilter: document.getElementById('graph-tag-filter'),
+            // Import/Export
+            btnExport: document.getElementById('btn-export'),
+            btnImport: document.getElementById('btn-import'),
+            fileImport: document.getElementById('file-import')
         };
 
         // --- INIT ---
         function init() {
             applyTheme(state.theme);
             loadData();
+            
+            // Ensure at least one note exists for demo
             if (state.notes.length === 0) createDefaultNote();
             
-            // Set Active Note
+            // Ensure active note is set
             if (!state.activeNoteId && state.notes.length > 0) setActiveNote(state.notes[0].id);
             else if (state.activeNoteId) setActiveNote(state.activeNoteId);
             
             setupWhiteboardInteractions();
+            setupKanbanInteractions();
             setupMarkdownInteractions();
             renderTree();
-            populateStatusDropdown();
+            updateBoardUI();
+            
+            // Force Kanban render
+            renderKanban();
 
             // Listeners
             el.title.addEventListener('input', e => updateActiveNote('title', e.target.value));
             el.status.addEventListener('change', e => updateActiveNote('status', e.target.value));
+            el.noteBoard.addEventListener('change', e => updateActiveNote('boardId', e.target.value));
             el.editor.addEventListener('input', updatePreview);
             el.btnMode.addEventListener('click', toggleEditMode);
             document.getElementById('btn-theme').addEventListener('click', toggleTheme);
@@ -295,56 +390,144 @@
             document.getElementById('btn-new-page').addEventListener('click', () => createNote());
             document.getElementById('btn-new-folder').addEventListener('click', createFolder);
             
+            el.sidebarTagFilter.addEventListener('input', (e) => { state.sidebar.filterText = e.target.value; renderTree(); });
+
+            // Import/Export
+            el.btnExport.addEventListener('click', exportData);
+            el.btnImport.addEventListener('click', () => el.fileImport.click());
+            el.fileImport.addEventListener('change', importData);
+
             // Graph
             el.chkTags.addEventListener('change', e => { state.graph.showTags = e.target.checked; if(state.currentView === 'graph') initGraph(); });
             el.chkFreeze.addEventListener('change', e => { state.graph.frozen = e.target.checked; if(!state.graph.frozen) animateGraph(); });
+            el.graphStatusSelect.addEventListener('change', e => { state.graph.filterStatus = e.target.value; initGraph(); });
+            el.graphTagFilter.addEventListener('input', e => { state.graph.textFilter = e.target.value; initGraph(); });
 
-            // Whiteboard Toggle
+            // Whiteboard
             el.wbShowStatus.addEventListener('change', e => { state.wb.showStatus = e.target.checked; renderWhiteboard(); });
+            el.wbShowTags.addEventListener('change', e => { state.wb.showTags = e.target.checked; renderWhiteboard(); });
+            el.wbShowHidden.addEventListener('change', e => { state.wb.showHidden = e.target.checked; renderWhiteboard(); });
+
+            // Kanban
+            el.kanbanBoardSelect.addEventListener('change', (e) => {
+                state.activeBoardId = e.target.value;
+                saveData(); renderKanban();
+            });
 
             updateModeUI();
         }
 
         // --- DATA ---
         function loadData() {
-            const raw = localStorage.getItem('nexus_data_v4');
+            const raw = localStorage.getItem('nexus_data_v11');
             if (raw) {
                 const data = JSON.parse(raw);
                 state.notes = data.notes || [];
                 state.folders = data.folders || [];
-                state.statuses = data.statuses || ['todo', 'doing', 'done'];
+                state.boards = data.boards || [{ id: 'default', name: 'Main', statuses: ['todo', 'doing', 'done'] }];
+                state.activeBoardId = data.activeBoardId || 'default';
+                state.kanban = { ...state.kanban, ...data.kanban };
                 
-                // Migration
+                // Integrity Check for Active Board
+                if (!state.boards.find(b => b.id === state.activeBoardId)) {
+                     if (state.boards.length > 0) state.activeBoardId = state.boards[0].id;
+                     else {
+                         state.boards = [{ id: 'default', name: 'Main', statuses: ['todo', 'doing', 'done'] }];
+                         state.activeBoardId = 'default';
+                     }
+                }
+                
                 state.notes.forEach(n => {
                     if (!n.wb) n.wb = { x: Math.random() * 800, y: Math.random() * 600 };
+                    if (!n.boardId) n.boardId = state.activeBoardId;
                     if (!n.status) n.status = 'todo';
-                    if (!state.statuses.includes(n.status)) state.statuses.push(n.status); // Recover lost statuses
                     if (!n.tags) n.tags = [];
                 });
+            } else {
+                state.boards = [{ id: 'default', name: 'Main', statuses: ['todo', 'doing', 'done'] }];
+                state.activeBoardId = 'default';
             }
         }
 
         function saveData() {
-            localStorage.setItem('nexus_data_v4', JSON.stringify({ 
+            localStorage.setItem('nexus_data_v11', JSON.stringify({ 
                 notes: state.notes, 
                 folders: state.folders,
-                statuses: state.statuses 
+                boards: state.boards,
+                activeBoardId: state.activeBoardId,
+                kanban: state.kanban
             }));
             el.saveStatus.innerText = 'Saved';
             setTimeout(() => el.saveStatus.innerText = '', 2000);
         }
 
+        function resetData() {
+            if(confirm("Reset all data to demo state?")) {
+                localStorage.removeItem('nexus_data_v11');
+                location.reload();
+            }
+        }
+
         function createDefaultNote() {
-            createNote("Welcome to Nexus", "# Nexus v4\n\nNew Features:\n- **Interactive Tasks**: Click [ ] to toggle.\n- **Tables**: Full markdown table support.\n\n| Feature | Status |\n| :--- | :--- |\n| Editor | Done |\n| Whiteboard | Done |\n| Kanban | Done |\n\n- **Dynamic Kanban**: Add/Rename columns.\n- **Whiteboard Controls**: Toggle status visibility.");
+            const demoContent = `# Nexus v11 Demo\n\n### Kanban\n- Drag headers to reorder columns.\n- Use **Pan & Zoom** (drag background, ctrl+scroll).\n- Tags show on cards. Click to filter graph.\n\n### Whiteboard\n- **"Show Hidden"** reveals 'no-status' notes.\n- **"Auto Arrange"** organizes notes.\n\n### Graph\n- **"Reset View"** centers graph.\n- Drag nodes to pin them while simulation runs.\n- Click nodes to edit.\n\n### Checkboxes\n- [x] Task A\n- [ ] Task B (Click me!) \n\n### Tables \n| Feature | Status | \n| :--- | :--- | \n| LaTeX | $E=mc^2$ | \n| Tags | #demo |`;
+            
+            const note = {
+                id: 'demo_note',
+                title: 'Welcome to Nexus',
+                content: demoContent,
+                folderId: null,
+                tags: ['demo', 'features'],
+                boardId: state.activeBoardId,
+                status: 'todo', 
+                wb: { x: 100, y: 100 },
+                timestamp: Date.now()
+            };
+            state.notes = [note];
+            saveData();
+            setActiveNote(note.id);
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify({ 
+                notes: state.notes, 
+                folders: state.folders,
+                boards: state.boards,
+                activeBoardId: state.activeBoardId,
+                kanban: state.kanban
+            }, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nexus_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (confirm("This will overwrite current data. Continue?")) {
+                        localStorage.setItem('nexus_data_v11', JSON.stringify(data));
+                        location.reload();
+                    }
+                } catch (err) { alert("Invalid file format"); }
+            };
+            reader.readAsText(file);
         }
 
         function createNote(title = "Untitled", content = "") {
+            const board = state.boards.find(b => b.id === state.activeBoardId) || state.boards[0];
             const note = {
                 id: '_' + Math.random().toString(36).substr(2, 9),
                 title, content,
                 folderId: null,
                 tags: [],
-                status: state.statuses[0] || 'todo',
+                boardId: state.activeBoardId,
+                status: 'no-status',
                 wb: { x: Math.random() * 500, y: Math.random() * 500 },
                 timestamp: Date.now()
             };
@@ -369,18 +552,20 @@
             const note = state.notes.find(n => n.id === state.activeNoteId);
             if (note) {
                 note[key] = value;
+                if (key === 'boardId') {
+                    const newBoard = state.boards.find(b => b.id === value);
+                    if (newBoard && !newBoard.statuses.includes(note.status)) note.status = 'no-status';
+                    updateBoardUI();
+                }
                 if (key === 'content') {
                     const tags = [...value.matchAll(/(?<=^|\s)(#[a-zA-Z0-9_]+)/g)].map(m => m[0]);
                     note.tags = [...new Set(tags)];
                 }
                 note.timestamp = Date.now();
                 saveData();
-                if (key === 'title') {
-                    renderTree(); 
-                    if(state.currentView === 'whiteboard') renderWhiteboard();
-                    if(state.currentView === 'kanban') renderKanban();
-                }
-                if (key === 'status') {
+                
+                if (key === 'title' || key === 'boardId' || key === 'status') {
+                    renderTree();
                     if(state.currentView === 'whiteboard') renderWhiteboard();
                     if(state.currentView === 'kanban') renderKanban();
                 }
@@ -390,116 +575,134 @@
         // --- VIEW NAV ---
         window.switchView = (viewName) => {
             state.currentView = viewName;
+            el.views.forEach(v => { v.classList.remove('active'); v.style.display = 'none'; });
+            const activeView = document.getElementById(`view-${viewName}`);
+            activeView.classList.add('active');
             
-            el.views.forEach(v => v.classList.remove('active'));
-            document.getElementById(`view-${viewName}`).classList.add('active');
+            // Handle Flex vs Block
+            if (viewName === 'editor' || viewName === 'kanban') activeView.style.display = 'flex';
+            else activeView.style.display = 'block';
             
             el.navBtns.forEach(b => b.classList.remove('active'));
             document.getElementById(`nav-${viewName}`).classList.add('active');
 
             if (viewName === 'editor') {
-                el.sidebar.classList.remove('w-0', 'opacity-0', 'overflow-hidden');
-                el.sidebar.classList.add('w-60');
+                el.sidebar.classList.remove('w-0', 'opacity-0', 'overflow-hidden'); el.sidebar.classList.add('w-60');
             } else {
-                el.sidebar.classList.add('w-0', 'opacity-0', 'overflow-hidden');
-                el.sidebar.classList.remove('w-60');
+                el.sidebar.classList.add('w-0', 'opacity-0', 'overflow-hidden'); el.sidebar.classList.remove('w-60');
             }
 
             if (viewName === 'whiteboard') renderWhiteboard();
             if (viewName === 'kanban') renderKanban();
-            if (viewName === 'graph') initGraph();
+            if (viewName === 'graph') {
+                updateGraphFiltersUI();
+                requestAnimationFrame(() => {
+                    resetGraphView();
+                    initGraph();
+                });
+            }
         };
 
         function setActiveNote(id) {
             state.activeNoteId = id;
             const note = state.notes.find(n => n.id === id);
             if (!note) return;
-            
             el.title.value = note.title;
             el.editor.value = note.content;
+            updateBoardUI(); 
+            el.noteBoard.value = note.boardId;
             el.status.value = note.status;
             updatePreview();
             renderTree();
         }
 
-        function populateStatusDropdown() {
-            el.status.innerHTML = state.statuses.map(s => `<option value="${s}">${s}</option>`).join('');
+        function updateBoardUI() {
+            const boardOpts = state.boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            el.kanbanBoardSelect.innerHTML = boardOpts;
+            el.kanbanBoardSelect.value = state.activeBoardId;
+            el.noteBoard.innerHTML = boardOpts;
+            const note = state.notes.find(n => n.id === state.activeNoteId);
+            const targetBoardId = note ? note.boardId : state.activeBoardId;
+            const board = state.boards.find(b => b.id === targetBoardId) || state.boards[0];
+            if (board) {
+                el.status.innerHTML = board.statuses.map(s => `<option value="${s}">${s}</option>`).join('');
+                if (note) el.status.value = note.status;
+            }
         }
 
         // --- EDITOR & MARKDOWN ---
         function updatePreview() {
             const raw = el.editor.value;
-            
-            // 1. Math Protection
             const mathStore = [];
             let text = raw
                 .replace(/\$\$([\s\S]*?)\$\$/g, (m, t) => { mathStore.push({t, d:true}); return `%%%M${mathStore.length-1}%%%`; })
                 .replace(/\$((?!\$)[\s\S]*?)\$/g, (m, t) => { mathStore.push({t, d:false}); return `%%%M${mathStore.length-1}%%%`; });
-            
-            // 2. Marked Parsing
             let html = marked.parse(text);
-            
-            // 3. Restore Math
             html = html.replace(/%%%M(\d+)%%%/g, (m, i) => {
                 const entry = mathStore[i];
                 try { return katex.renderToString(entry.t, { displayMode: entry.d, throwOnError: false }); }
                 catch { return entry.t; }
             });
-
-            // 4. Custom Syntax
             html = html.replace(/\[\[(.*?)\]\]/g, (m, t) => {
                 const exists = state.notes.some(n => n.title.toLowerCase() === t.toLowerCase());
                 const cls = exists ? 'wikilink' : 'wikilink is-missing';
                 return `<span class="${cls}" onclick="handleLink('${t.replace(/'/g, "\\'")}')">${t}</span>`;
             });
-            html = html.replace(/(?<=^|\s)(#[a-zA-Z0-9_]+)/g, '<span class="tag-pill">$1</span>');
-
+            html = html.replace(/(^|\s|>)(#[a-zA-Z0-9_]+)/g, '$1<span class="tag-pill" onclick="handleTagClick(\'$2\')">$2</span>');
+            html = html.replace(/disabled=""/g, ''); 
             el.preview.innerHTML = html;
             updateActiveNote('content', raw);
         }
 
         function setupMarkdownInteractions() {
             el.preview.addEventListener('click', (e) => {
-                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
-                    toggleTodo(e.target);
-                }
+                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') toggleTodo(e.target);
             });
         }
 
         function toggleTodo(checkbox) {
-            // Simple heuristic: find nth checkbox in source matching the clicked one's visual index
             const allChecks = Array.from(el.preview.querySelectorAll('input[type="checkbox"]'));
             const index = allChecks.indexOf(checkbox);
-            
             let raw = el.editor.value;
             let matchIndex = -1;
-            
-            // Replace nth occurrence of "- [ ]" or "- [x]"
-            const regex = /[-*]\s\[([ x])\]/g;
-            
-            const newRaw = raw.replace(regex, (match, p1) => {
+            const regex = /^([-*]\s\[)([ x])(\])/gm;
+            const newRaw = raw.replace(regex, (match, prefix, state, suffix) => {
                 matchIndex++;
-                if (matchIndex === index) {
-                    const newVal = p1 === ' ' ? 'x' : ' ';
-                    return match.replace(`[${p1}]`, `[${newVal}]`);
-                }
+                if (matchIndex === index) return `${prefix}${state === ' ' ? 'x' : ' '}${suffix}`;
                 return match;
             });
-            
             if (newRaw !== raw) {
                 el.editor.value = newRaw;
-                updatePreview();
+                updateActiveNote('content', newRaw);
+                updatePreview(); 
             }
         }
 
         window.handleLink = (title) => {
             const target = state.notes.find(n => n.title.toLowerCase() === title.toLowerCase());
-            if (target) {
-                setActiveNote(target.id);
-                if(state.currentView !== 'editor') switchView('editor');
-            } else {
-                createNote(title, `# ${title}`);
-            }
+            if (target) { setActiveNote(target.id); switchView('editor'); }
+            else createNote(title, `# ${title}`);
+        };
+
+        window.handleTagClick = (tagName) => {
+            const cleanTag = tagName.startsWith('#') ? tagName.substring(1) : tagName;
+            switchView('graph');
+            state.graph.filterTag = cleanTag;
+            // Set the filter input to match
+            state.graph.textFilter = cleanTag;
+            el.graphTagFilter.value = cleanTag;
+            
+            el.graphFilterStatus.classList.remove('hidden');
+            el.filterTagName.innerText = tagName;
+            requestAnimationFrame(() => initGraph());
+        };
+        
+        window.clearGraphFilter = () => {
+            state.graph.filterTag = null;
+            state.graph.textFilter = '';
+            el.graphTagFilter.value = '';
+            el.graphFilterStatus.classList.add('hidden');
+            initGraph();
         };
 
         function toggleEditMode() { state.isEditMode = !state.isEditMode; updateModeUI(); }
@@ -515,10 +718,65 @@
             }
         }
 
+        // --- WHITEBOARD & KANBAN COMMON INTERACTION ---
+        function setupPanZoom(container, canvas, stateObj) {
+            container.addEventListener('wheel', e => {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    const s = Math.exp(-e.deltaY * 0.001);
+                    stateObj.scale = Math.min(Math.max(0.1, stateObj.scale * s), 4);
+                } else {
+                    stateObj.x -= e.deltaX; stateObj.y -= e.deltaY;
+                }
+                updateTransform(canvas, stateObj);
+                saveData(); 
+            });
+            container.addEventListener('mousedown', e => {
+                if (e.target === container || e.target === canvas || e.target.id === 'kanban-container') {
+                    stateObj.isPanning = true;
+                    stateObj.lastX = e.clientX; stateObj.lastY = e.clientY;
+                    container.style.cursor = 'grabbing';
+                }
+            });
+            window.addEventListener('mousemove', e => {
+                if (stateObj.isPanning) {
+                    stateObj.x += e.clientX - stateObj.lastX;
+                    stateObj.y += e.clientY - stateObj.lastY;
+                    stateObj.lastX = e.clientX; stateObj.lastY = e.clientY;
+                    updateTransform(canvas, stateObj);
+                }
+            });
+            window.addEventListener('mouseup', () => {
+                stateObj.isPanning = false;
+                container.style.cursor = 'grab';
+            });
+        }
+
+        function updateTransform(el, state) {
+            el.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        }
+
         // --- WHITEBOARD ---
+        function setupWhiteboardInteractions() {
+            setupPanZoom(el.wbContainer, el.wbCanvas, state.wb);
+            window.addEventListener('mousemove', e => {
+                if (window.draggedCard) {
+                    const dx = (e.clientX - window.dragStart.x) / state.wb.scale;
+                    const dy = (e.clientY - window.dragStart.y) / state.wb.scale;
+                    const note = state.notes.find(n => n.id === window.draggedCard);
+                    note.wb.x = window.cardStart.x + dx;
+                    note.wb.y = window.cardStart.y + dy;
+                    renderWhiteboard(); 
+                }
+            });
+            window.addEventListener('mouseup', () => { if(window.draggedCard) { window.draggedCard = null; saveData(); } });
+        }
+
         function renderWhiteboard() {
             el.wbCanvas.innerHTML = '';
             state.notes.forEach(note => {
+                if (note.status === 'no-status' && !state.wb.showHidden) return; 
+
                 const card = document.createElement('div');
                 card.className = 'wb-card';
                 card.style.left = `${note.wb.x}px`;
@@ -533,90 +791,46 @@
                 body.className = 'wb-body';
                 body.innerText = note.content;
                 
-                card.appendChild(header);
-                card.appendChild(body);
+                card.appendChild(header); card.appendChild(body);
 
-                if (state.wb.showStatus) {
+                if (state.wb.showStatus || (state.wb.showTags && note.tags.length > 0)) {
                     const footer = document.createElement('div');
                     footer.className = 'wb-footer';
-                    footer.innerHTML = `<div class="wb-status-badge" title="Click to cycle status" onclick="cycleStatus('${note.id}')">${note.status}</div>`;
+                    if (state.wb.showStatus) footer.innerHTML += `<div class="wb-status-badge" onclick="cycleStatus('${note.id}')">${note.status}</div>`;
+                    if (state.wb.showTags) footer.innerHTML += note.tags.map(t => `<span class="tag-pill" onclick="handleTagClick('${t}')">#${t}</span>`).join('');
                     card.appendChild(footer);
                 }
-
                 el.wbCanvas.appendChild(card);
             });
-            applyTransform();
+            updateTransform(el.wbCanvas, state.wb);
         }
 
         window.cycleStatus = (id) => {
             const note = state.notes.find(n => n.id === id);
             if (note) {
-                const currIdx = state.statuses.indexOf(note.status);
-                const nextIdx = (currIdx + 1) % state.statuses.length;
-                note.status = state.statuses[nextIdx];
-                saveData();
-                renderWhiteboard();
+                const board = state.boards.find(b => b.id === note.boardId) || state.boards[0];
+                const currIdx = board.statuses.indexOf(note.status);
+                const nextIdx = (currIdx + 1) % board.statuses.length;
+                note.status = board.statuses[nextIdx];
+                saveData(); renderWhiteboard();
             }
         };
 
         window.editNote = (id) => { setActiveNote(id); switchView('editor'); };
-
-        function setupWhiteboardInteractions() {
-            // Wheel Zoom
-            el.wbContainer.addEventListener('wheel', e => {
-                if (e.ctrlKey) {
-                    e.preventDefault();
-                    const s = Math.exp(-e.deltaY * 0.001);
-                    state.wb.scale = Math.min(Math.max(0.1, state.wb.scale * s), 4);
-                    applyTransform();
-                } else {
-                    // Pan with scroll wheels if not ctrl
-                    if(!e.ctrlKey) {
-                        state.wb.x -= e.deltaX;
-                        state.wb.y -= e.deltaY;
-                        applyTransform();
-                    }
-                }
-            });
-
-            // Mouse Down (Pan or Drag)
-            el.wbContainer.addEventListener('mousedown', e => {
-                // Middle mouse or Space+Click logic could go here, keeping simple background drag
-                if (e.target === el.wbContainer || e.target === el.wbCanvas) {
-                    state.wb.isPanning = true;
-                    state.wb.lastX = e.clientX;
-                    state.wb.lastY = e.clientY;
-                    el.wbContainer.style.cursor = 'grabbing';
-                }
-            });
-
-            window.addEventListener('mousemove', e => {
-                if (state.wb.isPanning) {
-                    state.wb.x += e.clientX - state.wb.lastX;
-                    state.wb.y += e.clientY - state.wb.lastY;
-                    state.wb.lastX = e.clientX;
-                    state.wb.lastY = e.clientY;
-                    applyTransform();
-                }
-                if (window.draggedCard) {
-                    const dx = (e.clientX - window.dragStart.x) / state.wb.scale;
-                    const dy = (e.clientY - window.dragStart.y) / state.wb.scale;
-                    const note = state.notes.find(n => n.id === window.draggedCard);
-                    note.wb.x = window.cardStart.x + dx;
-                    note.wb.y = window.cardStart.y + dy;
-                    renderWhiteboard(); 
-                }
-            });
-
-            window.addEventListener('mouseup', () => {
-                state.wb.isPanning = false;
-                el.wbContainer.style.cursor = 'grab';
-                if(window.draggedCard) { window.draggedCard = null; saveData(); }
-            });
-        }
-
+        window.autoArrangeWhiteboard = () => {
+             const visible = state.notes.filter(n => n.status !== 'no-status' || state.wb.showHidden);
+             const cols = Math.ceil(Math.sqrt(visible.length));
+             const spacing = 320;
+             visible.forEach((n, i) => {
+                 n.wb.x = (i % cols) * spacing;
+                 n.wb.y = Math.floor(i / cols) * spacing;
+             });
+             state.wb.x = 100; state.wb.y = 100; state.wb.scale = 1;
+             saveData(); renderWhiteboard();
+        };
+        
         function startCardDrag(e, id) {
-            if(e.target.closest('.fa-up-right-from-square')) return; // Don't drag if clicking edit icon
+            if(e.target.closest('.fa-up-right-from-square')) return;
             e.stopPropagation();
             window.draggedCard = id;
             window.dragStart = { x: e.clientX, y: e.clientY };
@@ -624,270 +838,246 @@
             window.cardStart = { x: note.wb.x, y: note.wb.y };
         }
 
-        function applyTransform() {
-            el.wbCanvas.style.transform = `translate(${state.wb.x}px, ${state.wb.y}px) scale(${state.wb.scale})`;
+        // --- KANBAN ---
+        function setupKanbanInteractions() {
+            setupPanZoom(el.kanbanWrapper, el.kanbanCanvas, state.kanban);
+            updateTransform(el.kanbanCanvas, state.kanban);
         }
 
-        // --- KANBAN ---
         function renderKanban() {
-            // Clear but keep Add button
             const container = el.kanbanContainer;
-            // Remove existing columns
-            const existing = container.querySelectorAll('.kanban-col');
-            existing.forEach(e => e.remove());
-
-            // Insert Statuses
-            const addBtn = container.querySelector('div:last-child');
-
-            state.statuses.forEach(status => {
+            container.innerHTML = ''; 
+            container.className = `kanban-container layout-${state.kanban.boardLayout}`;
+            const activeBoard = state.boards.find(b => b.id === state.activeBoardId) || state.boards[0];
+            
+            activeBoard.statuses.forEach((status, index) => {
                 const col = document.createElement('div');
                 col.className = 'kanban-col';
+                col.draggable = true;
+                col.ondragstart = (e) => { e.dataTransfer.setData('col-idx', index); e.dataTransfer.effectAllowed = "move"; };
                 col.ondragover = allowDrop;
-                col.ondrop = (e) => dropKanban(e, status);
-                
-                const colNotes = state.notes.filter(n => n.status === status);
-                
+                col.ondrop = (e) => dropKanbanCol(e, index);
+
+                const dropZone = document.createElement('div');
+                dropZone.className = 'kanban-drop-zone';
+                dropZone.ondragover = allowDrop;
+                dropZone.ondrop = (e) => { e.stopPropagation(); dropKanbanNote(e, status); };
+
+                const colNotes = state.notes.filter(n => n.boardId === activeBoard.id && n.status === status);
                 col.innerHTML = `
                     <div class="kanban-header">
                         <span class="uppercase text-xs font-bold tracking-wider cursor-pointer" ondblclick="renameStatus('${status}')">${status}</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs bg-bgHover px-2 rounded-full">${colNotes.length}</span>
-                            <i class="fa-solid fa-xmark text-textMuted hover:text-red-500 cursor-pointer text-xs" onclick="deleteStatus('${status}')"></i>
-                        </div>
-                    </div>
-                    <div class="kanban-list space-y-2"></div>
-                `;
-
-                const list = col.querySelector('.kanban-list');
+                        <div class="flex items-center gap-2"><span class="text-xs bg-bgHover px-2 rounded-full">${colNotes.length}</span><i class="fa-solid fa-xmark text-textMuted hover:text-red-500 cursor-pointer text-xs" onclick="deleteStatus('${status}')"></i></div>
+                    </div>`;
+                
+                const list = document.createElement('div');
+                list.className = `kanban-list items-${state.kanban.itemLayout}`;
                 colNotes.forEach(note => {
                     const card = document.createElement('div');
                     card.className = 'kanban-card';
                     card.draggable = true;
-                    card.innerHTML = `<div class="font-medium text-sm">${note.title}</div><div class="text-xs text-textMuted mt-1 truncate">${note.content.substring(0,50)}</div>`;
-                    card.ondragstart = (e) => { e.dataTransfer.setData('text/plain', note.id); };
+                    let tagsHtml = (note.tags && note.tags.length > 0) ? `<div class="mt-2 pt-1 border-t border-borderMain flex flex-wrap gap-1">` + note.tags.map(t => `<span class="tag-pill" onclick="event.stopPropagation(); handleTagClick('${t}')">#${t}</span>`).join('') + `</div>` : '';
+                    card.innerHTML = `<div class="font-medium text-sm">${note.title}</div><div class="text-xs text-textMuted mt-1 truncate">${note.content.substring(0,50)}</div>${tagsHtml}`;
+                    card.ondragstart = (e) => { e.dataTransfer.setData('text/plain', note.id); e.stopPropagation(); };
                     card.onclick = () => { setActiveNote(note.id); switchView('editor'); };
                     list.appendChild(card);
                 });
-
-                container.insertBefore(col, addBtn);
+                dropZone.appendChild(list);
+                col.appendChild(dropZone);
+                container.appendChild(col);
             });
         }
 
-        window.addKanbanColumn = () => {
-            const name = prompt("New Status Name:");
-            if (name && !state.statuses.includes(name)) {
-                state.statuses.push(name);
-                saveData();
-                renderKanban();
-                populateStatusDropdown();
-            }
+        window.toggleKanbanLayout = (type) => {
+            if (type === 'board') state.kanban.boardLayout = state.kanban.boardLayout === 'row' ? 'col' : 'row';
+            else state.kanban.itemLayout = state.kanban.itemLayout === 'col' ? 'row' : 'col';
+            saveData(); renderKanban();
         };
 
-        window.renameStatus = (oldName) => {
-            const newName = prompt("Rename Status:", oldName);
-            if (newName && newName !== oldName && !state.statuses.includes(newName)) {
-                const idx = state.statuses.indexOf(oldName);
-                state.statuses[idx] = newName;
-                // Update notes
-                state.notes.forEach(n => { if (n.status === oldName) n.status = newName; });
-                saveData();
-                renderKanban();
-                populateStatusDropdown();
-            }
-        };
-
-        window.deleteStatus = (status) => {
-            if (confirm(`Delete status "${status}"? Notes will be moved to Todo.`)) {
-                state.statuses = state.statuses.filter(s => s !== status);
-                if (state.statuses.length === 0) state.statuses.push('todo'); // Prevent empty
-                state.notes.forEach(n => { if (n.status === status) n.status = state.statuses[0]; });
-                saveData();
-                renderKanban();
-                populateStatusDropdown();
-            }
-        };
-
+        window.addBoard = () => { const name = prompt("New Board Name:"); if (name) { const id = '_' + Math.random().toString(36).substr(2,9); state.boards.push({ id, name, statuses: ['no-status', 'todo', 'doing', 'done'] }); state.activeBoardId = id; saveData(); updateBoardUI(); renderKanban(); }};
+        window.deleteBoard = () => { if (state.boards.length <= 1) return; if (confirm("Delete board?")) { state.boards = state.boards.filter(b => b.id !== state.activeBoardId); state.activeBoardId = state.boards[0].id; saveData(); updateBoardUI(); renderKanban(); }};
+        window.addKanbanColumn = () => { const board = state.boards.find(b => b.id === state.activeBoardId); const name = prompt("New Status Name:"); if (name && !board.statuses.includes(name)) { board.statuses.push(name); saveData(); renderKanban(); updateBoardUI(); }};
+        window.renameStatus = (oldName) => { const board = state.boards.find(b => b.id === state.activeBoardId); const newName = prompt("Rename:", oldName); if (newName && !board.statuses.includes(newName)) { board.statuses[board.statuses.indexOf(oldName)] = newName; state.notes.filter(n => n.boardId === board.id && n.status === oldName).forEach(n => n.status = newName); saveData(); renderKanban(); updateBoardUI(); }};
+        window.deleteStatus = (status) => { const board = state.boards.find(b => b.id === state.activeBoardId); if (confirm(`Delete "${status}"?`)) { board.statuses = board.statuses.filter(s => s !== status); if(board.statuses.length===0) board.statuses.push('no-status'); state.notes.filter(n => n.boardId === board.id && n.status === status).forEach(n => n.status = board.statuses[0]); saveData(); renderKanban(); updateBoardUI(); }};
         window.allowDrop = (e) => e.preventDefault();
-        window.dropKanban = (e, status) => {
-            e.preventDefault();
-            const id = e.dataTransfer.getData('text/plain');
-            const note = state.notes.find(n => n.id === id);
-            if (note && note.status !== status) {
-                note.status = status;
-                saveData();
-                renderKanban();
-            }
-        };
+        window.dropKanbanNote = (e, status) => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if(!id) return; const note = state.notes.find(n => n.id === id); if (note) { note.boardId = state.activeBoardId; note.status = status; saveData(); renderKanban(); }};
+        window.dropKanbanCol = (e, targetIdx) => { e.preventDefault(); const srcIdx = e.dataTransfer.getData('col-idx'); if (srcIdx === "") return; const board = state.boards.find(b => b.id === state.activeBoardId); const s = [...board.statuses]; const [r] = s.splice(srcIdx, 1); s.splice(targetIdx, 0, r); board.statuses = s; saveData(); renderKanban(); updateBoardUI(); };
 
-        // --- GRAPH (Force Directed) ---
+        // --- GRAPH ---
         let ctx = el.graphCanvas.getContext('2d');
         let graphNodes = [], graphLinks = [];
         let graphTransform = { x: 0, y: 0, k: 1 };
         let animationFrameId;
 
+        window.resetGraphView = () => {
+             const rect = el.graphCanvas.parentElement.getBoundingClientRect();
+             if(rect.width) {
+                el.graphCanvas.width = rect.width;
+                el.graphCanvas.height = rect.height;
+                graphTransform = { x: rect.width/2, y: rect.height/2, k: 1 };
+                drawGraph();
+             }
+        };
+
+        function updateGraphFiltersUI() {
+            const allStatuses = new Set(state.notes.map(n => n.status));
+            el.graphStatusSelect.innerHTML = `<option value="all">All Statuses</option>` + Array.from(allStatuses).map(s => `<option value="${s}">${s}</option>`).join('');
+            el.graphStatusSelect.value = state.graph.filterStatus;
+        }
+
         function initGraph() {
             const rect = el.graphCanvas.parentElement.getBoundingClientRect();
-            el.graphCanvas.width = rect.width;
-            el.graphCanvas.height = rect.height;
-            graphTransform = { x: rect.width/2, y: rect.height/2, k: 1 };
+            if (rect.width === 0) return;
+            el.graphCanvas.width = rect.width; el.graphCanvas.height = rect.height;
 
-            graphNodes = state.notes.map(n => ({
-                id: n.id, label: n.title, type: 'note',
-                x: (Math.random()-0.5)*rect.width*0.5, y: (Math.random()-0.5)*rect.height*0.5,
-                vx: 0, vy: 0
-            }));
+            let visibleNotes = state.notes;
+            
+            // Text Filter (Any Match on Tags)
+            if (state.graph.textFilter) {
+                const searchTags = state.graph.textFilter.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
+                if (searchTags.length > 0) {
+                    visibleNotes = visibleNotes.filter(n => n.tags.some(tag => searchTags.some(st => tag.toLowerCase().includes(st))));
+                }
+            }
+            // Click Filter (Specific Tag)
+            if (state.graph.filterTag) {
+                visibleNotes = visibleNotes.filter(n => n.tags.includes(state.graph.filterTag));
+            }
+            
+            if (state.graph.filterStatus !== 'all') visibleNotes = visibleNotes.filter(n => n.status === state.graph.filterStatus);
 
-            if(state.graph.showTags) {
-                const tags = new Set(state.notes.flatMap(n => n.tags));
+            graphNodes = visibleNotes.map(n => {
+                const existing = graphNodes.find(gn => gn.id === n.id);
+                return {
+                    id: n.id, label: n.title, type: 'note',
+                    x: existing ? existing.x : (Math.random()-0.5)*rect.width*0.5, 
+                    y: existing ? existing.y : (Math.random()-0.5)*rect.height*0.5,
+                    vx: existing ? existing.vx : 0, vy: existing ? existing.vy : 0
+                };
+            });
+            
+            const showTags = state.graph.showTags || state.graph.filterTag;
+            if(showTags) {
+                const tags = new Set(); visibleNotes.forEach(n => n.tags.forEach(t => tags.add(t)));
                 tags.forEach(t => {
-                    graphNodes.push({
-                        id: `tag_${t}`, label: t, type: 'tag',
-                        x: (Math.random()-0.5)*rect.width*0.4, y: (Math.random()-0.5)*rect.height*0.4,
-                        vx:0, vy:0
-                    })
+                     const existing = graphNodes.find(gn => gn.id === `tag_${t}`);
+                     graphNodes.push({ id: `tag_${t}`, label: t, type: 'tag', x: existing?existing.x:(Math.random()-0.5)*rect.width*0.4, y: existing?existing.y:(Math.random()-0.5)*rect.height*0.4, vx:0, vy:0 })
                 });
             }
-
             graphLinks = [];
-            state.notes.forEach(n => {
+            visibleNotes.forEach(n => {
                 const links = [...n.content.matchAll(/\[\[(.*?)\]\]/g)].map(m => m[1]);
                 links.forEach(l => {
-                    const target = state.notes.find(t => t.title.toLowerCase() === l.toLowerCase());
+                    const target = visibleNotes.find(t => t.title.toLowerCase() === l.toLowerCase());
                     if(target) graphLinks.push({ source: n.id, target: target.id });
                 });
-                if(state.graph.showTags) n.tags.forEach(t => graphLinks.push({ source: n.id, target: `tag_${t}` }));
+                if(showTags) n.tags.forEach(t => graphLinks.push({ source: n.id, target: `tag_${t}` }));
             });
-
-            if(!state.graph.frozen) animateGraph();
-            else drawGraph();
+            if(!state.graph.frozen) animateGraph(); else drawGraph();
         }
 
         function animateGraph() {
             if(state.currentView !== 'graph' || state.graph.frozen) return;
-
             for(let i=0; i<graphNodes.length; i++) {
                 for(let j=i+1; j<graphNodes.length; j++) {
-                    let dx = graphNodes[j].x - graphNodes[i].x;
-                    let dy = graphNodes[j].y - graphNodes[i].y;
+                    let dx = graphNodes[j].x - graphNodes[i].x; let dy = graphNodes[j].y - graphNodes[i].y;
                     let d2 = dx*dx + dy*dy || 1;
                     if(d2 < 200000) {
                         let force = 400 / d2;
-                        let fx = (dx/Math.sqrt(d2)) * force;
-                        let fy = (dy/Math.sqrt(d2)) * force;
-                        graphNodes[j].vx += fx; graphNodes[j].vy += fy;
-                        graphNodes[i].vx -= fx; graphNodes[i].vy -= fy;
+                        let fx = (dx/Math.sqrt(d2)) * force; let fy = (dy/Math.sqrt(d2)) * force;
+                        graphNodes[j].vx += fx; graphNodes[j].vy += fy; graphNodes[i].vx -= fx; graphNodes[i].vy -= fy;
                     }
                 }
             }
-
             graphLinks.forEach(l => {
-                let s = graphNodes.find(n => n.id === l.source);
-                let t = graphNodes.find(n => n.id === l.target);
+                let s = graphNodes.find(n => n.id === l.source); let t = graphNodes.find(n => n.id === l.target);
                 if(s && t) {
-                    let dx = t.x - s.x, dy = t.y - s.y;
-                    s.vx += dx * 0.005; s.vy += dy * 0.005;
-                    t.vx -= dx * 0.005; t.vy -= dy * 0.005;
+                    let dx = t.x - s.x; let dy = t.y - s.y;
+                    s.vx += dx * 0.005; s.vy += dy * 0.005; t.vx -= dx * 0.005; t.vy -= dy * 0.005;
                 }
             });
-
             graphNodes.forEach(n => {
-                n.x += n.vx; n.y += n.vy;
-                n.vx *= 0.9; n.vy *= 0.9;
-                n.x -= n.x * 0.001; n.y -= n.y * 0.001;
+                if (n !== draggedGraphNode) { n.x += n.vx; n.y += n.vy; n.vx *= 0.9; n.vy *= 0.9; n.x -= n.x * 0.001; n.y -= n.y * 0.001; }
+                else { n.vx = 0; n.vy = 0; }
             });
-
             drawGraph();
             requestAnimationFrame(animateGraph);
         }
 
         function drawGraph() {
             ctx.clearRect(0, 0, el.graphCanvas.width, el.graphCanvas.height);
-            ctx.save();
-            ctx.translate(graphTransform.x, graphTransform.y);
-            ctx.scale(graphTransform.k, graphTransform.k);
-
+            ctx.save(); ctx.translate(graphTransform.x, graphTransform.y); ctx.scale(graphTransform.k, graphTransform.k);
             const style = getComputedStyle(document.body);
             const cLine = style.getPropertyValue('--text-muted').trim();
             const cAccent = style.getPropertyValue('--accent').trim();
             const cTag = style.getPropertyValue('--tag-color').trim();
-
-            ctx.beginPath();
-            ctx.strokeStyle = cLine;
+            ctx.beginPath(); ctx.strokeStyle = cLine;
             graphLinks.forEach(l => {
-                let s = graphNodes.find(n => n.id === l.source);
-                let t = graphNodes.find(n => n.id === l.target);
+                let s = graphNodes.find(n => n.id === l.source); let t = graphNodes.find(n => n.id === l.target);
                 if(s && t) { ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y); }
-            });
-            ctx.stroke();
-
+            }); ctx.stroke();
             graphNodes.forEach(n => {
-                ctx.beginPath();
-                ctx.arc(n.x, n.y, n.type==='tag'?4:6, 0, Math.PI*2);
+                ctx.beginPath(); ctx.arc(n.x, n.y, n.type==='tag'?4:6, 0, Math.PI*2);
                 ctx.fillStyle = n.type === 'tag' ? cTag : (n.id === state.activeNoteId ? cAccent : '#9ca3af');
-                ctx.fill();
-                ctx.fillStyle = style.getPropertyValue('--text-main').trim();
-                ctx.font = '10px Inter';
-                ctx.fillText(n.label, n.x + 8, n.y + 3);
+                ctx.fill(); ctx.fillStyle = style.getPropertyValue('--text-main').trim(); ctx.font = '10px Inter'; ctx.fillText(n.label, n.x + 8, n.y + 3);
             });
-
             ctx.restore();
         }
         
-        let isDraggingGraph = false;
-        let graphDragStart = {x:0, y:0};
-
+        let isDraggingGraph = false, graphDragStart = {x:0, y:0}, draggedGraphNode = null, mouseDownTime = 0, mouseDownPos = {x:0, y:0};
         el.graphCanvas.addEventListener('mousedown', e => {
+            mouseDownTime = Date.now(); mouseDownPos = {x: e.clientX, y: e.clientY};
             const rect = el.graphCanvas.getBoundingClientRect();
             const mx = (e.clientX - rect.left - graphTransform.x) / graphTransform.k;
             const my = (e.clientY - rect.top - graphTransform.y) / graphTransform.k;
-            
             const clicked = graphNodes.find(n => (n.x-mx)**2 + (n.y-my)**2 < 100);
-            if(clicked) setActiveNote(clicked.id);
-            else { isDraggingGraph = true; graphDragStart = { x: e.clientX, y: e.clientY }; }
+            if(clicked) { draggedGraphNode = clicked; isDraggingGraph = true; graphDragStart = { x: e.clientX, y: e.clientY, type: 'node' }; } 
+            else { isDraggingGraph = true; graphDragStart = { x: e.clientX, y: e.clientY, type: 'pan' }; }
         });
-
         el.graphCanvas.addEventListener('mousemove', e => {
             if(isDraggingGraph) {
-                graphTransform.x += e.clientX - graphDragStart.x;
-                graphTransform.y += e.clientY - graphDragStart.y;
-                graphDragStart = { x: e.clientX, y: e.clientY };
+                if (graphDragStart.type === 'pan') { graphTransform.x += e.clientX - graphDragStart.x; graphTransform.y += e.clientY - graphDragStart.y; } 
+                else if (graphDragStart.type === 'node' && draggedGraphNode) { draggedGraphNode.x += (e.clientX - graphDragStart.x) / graphTransform.k; draggedGraphNode.y += (e.clientY - graphDragStart.y) / graphTransform.k; }
+                graphDragStart = { x: e.clientX, y: e.clientY, type: graphDragStart.type };
                 if(state.graph.frozen) drawGraph();
             }
         });
-
-        el.graphCanvas.addEventListener('mouseup', () => { isDraggingGraph = false; });
-        el.graphCanvas.addEventListener('wheel', e => {
-            e.preventDefault();
-            graphTransform.k = Math.max(0.1, graphTransform.k - e.deltaY * 0.001);
-            drawGraph();
+        el.graphCanvas.addEventListener('mouseup', (e) => { 
+            const timeDiff = Date.now() - mouseDownTime;
+            const distDiff = Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y);
+            if (draggedGraphNode && graphDragStart.type === 'node' && timeDiff < 200 && distDiff < 5) {
+                 if (draggedGraphNode.type === 'tag') window.handleTagClick(draggedGraphNode.label);
+                 else { setActiveNote(draggedGraphNode.id); switchView('editor'); }
+            }
+            isDraggingGraph = false; draggedGraphNode = null; 
         });
+        el.graphCanvas.addEventListener('wheel', e => { e.preventDefault(); graphTransform.k = Math.max(0.1, graphTransform.k - e.deltaY * 0.001); drawGraph(); });
 
-        function toggleTheme() {
-            state.theme = state.theme === 'dark' ? 'light' : 'dark';
-            applyTheme(state.theme);
-            if(state.currentView === 'graph') drawGraph();
-        }
-
-        function applyTheme(theme) {
-            localStorage.setItem('nexus_theme', theme);
-            document.documentElement.className = theme;
-            document.querySelector('#btn-theme i').className = theme === 'dark' ? 'fa-regular fa-moon' : 'fa-regular fa-sun';
-        }
-
+        // --- SIDEBAR FILTER ---
         function renderTree() {
-            const c = document.getElementById('file-tree');
-            c.innerHTML = '';
-            const filter = document.getElementById('search-input').value.toLowerCase();
+            const c = document.getElementById('file-tree'); c.innerHTML = '';
+            const search = document.getElementById('search-input').value.toLowerCase();
+            
+            // New Tag Text Filter
+            const tagTextFilter = state.sidebar.filterText ? state.sidebar.filterText.split(',').map(t => t.trim().toLowerCase().replace('#','')).filter(t=>t) : [];
+
+            const filterFn = (n) => {
+                const matchesSearch = n.title.toLowerCase().includes(search);
+                let matchesTagText = true;
+                if (tagTextFilter.length > 0) {
+                    matchesTagText = n.tags.some(t => tagTextFilter.some(f => t.toLowerCase().includes(f)));
+                }
+                return matchesSearch && matchesTagText;
+            };
+
             state.folders.forEach(f => {
                 const div = document.createElement('div');
                 div.innerHTML = `<div class="p-1 text-textMain font-bold flex items-center cursor-pointer hover:bg-bgHover rounded"><i class="fa-solid ${f.isOpen?'fa-chevron-down':'fa-chevron-right'} w-4 text-xs mr-1 text-textMuted"></i> ${f.name}</div>`;
                 div.onclick = () => { f.isOpen = !f.isOpen; saveData(); renderTree(); };
                 c.appendChild(div);
-                if(f.isOpen) {
-                    state.notes.filter(n => n.folderId === f.id && n.title.toLowerCase().includes(filter)).forEach(n => c.appendChild(createTreeItem(n, true)));
-                }
+                if(f.isOpen) state.notes.filter(n => n.folderId === f.id && filterFn(n)).forEach(n => c.appendChild(createTreeItem(n, true)));
             });
-            state.notes.filter(n => !n.folderId && n.title.toLowerCase().includes(filter)).forEach(n => c.appendChild(createTreeItem(n, false)));
+            state.notes.filter(n => !n.folderId && filterFn(n)).forEach(n => c.appendChild(createTreeItem(n, false)));
         }
 
         function createTreeItem(note, indent) {
@@ -897,6 +1087,9 @@
             div.onclick = () => setActiveNote(note.id);
             return div;
         }
+
+        function toggleTheme() { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(state.theme); if(state.currentView === 'graph') drawGraph(); }
+        function applyTheme(theme) { localStorage.setItem('nexus_theme', theme); document.documentElement.className = theme; document.querySelector('#btn-theme i').className = theme === 'dark' ? 'fa-regular fa-moon' : 'fa-regular fa-sun'; }
 
         init();
     </script>
