@@ -75,11 +75,20 @@
         .markdown-preview h2 { font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; color: var(--text-main); }
         .markdown-preview h3 { font-size: 1.25em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
         .markdown-preview p { margin-bottom: 1em; line-height: 1.6; }
+        
+        /* Lists */
         .markdown-preview ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
         .markdown-preview ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1em; }
+        .markdown-preview li { margin-bottom: 0.25em; }
+        .markdown-preview ul ul, .markdown-preview ol ol, .markdown-preview ul ol, .markdown-preview ol ul { margin-bottom: 0; margin-top: 0.25em; }
+
         .markdown-preview blockquote { border-left: 4px solid var(--accent); padding-left: 1em; font-style: italic; color: var(--text-muted); margin-bottom: 1em; background: var(--bg-hover); padding-top:0.5em; padding-bottom:0.5em; }
-        .markdown-preview code { background-color: var(--bg-hover); padding: 0.2em 0.4em; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
+        
+        /* Code Blocks */
+        .markdown-preview code { background-color: var(--bg-hover); padding: 0.2em 0.4em; border-radius: 4px; font-family: monospace; font-size: 0.9em; color: var(--accent); }
         .markdown-preview pre { background-color: var(--bg-sidebar); padding: 1em; border-radius: 8px; overflow-x: auto; margin-bottom: 1em; border: 1px solid var(--border-main); }
+        .markdown-preview pre code { background-color: transparent; padding: 0; color: var(--text-main); font-size: 0.85em; }
+        
         .markdown-preview a { color: #60a5fa; text-decoration: underline; }
         .markdown-preview hr { border-color: var(--border-main); margin: 2em 0; }
 
@@ -189,7 +198,7 @@
         <div class="p-2 border-t border-borderMain bg-bgSidebar grid grid-cols-3 gap-2">
             <button id="btn-new-page" class="bg-accent hover:bg-opacity-90 text-white py-1.5 rounded text-xs font-bold flex items-center justify-center" title="New Note"><i class="fa-solid fa-plus"></i></button>
             <button id="btn-new-folder" class="bg-white dark:bg-gray-800 border border-borderMain text-textMain py-1.5 rounded text-xs font-bold flex items-center justify-center" title="New Folder"><i class="fa-solid fa-folder"></i></button>
-            <button id="btn-ts-note" class="bg-white dark:bg-gray-800 border border-borderMain text-textMain py-1.5 rounded text-xs font-bold flex items-center justify-center" title="Timestamp Note"><i class="fa-regular fa-clock"></i></button>
+            <button id="btn-ts-note" class="bg-white dark:bg-gray-800 border border-borderMain text-textMain py-1.5 rounded text-xs font-bold flex items-center justify-center" title="Insert/Create Timestamp Note"><i class="fa-regular fa-clock"></i></button>
         </div>
     </aside>
 
@@ -289,6 +298,18 @@
     </main>
 
     <script>
+        // --- UTILS ---
+        function getLocalTimestamp() {
+            const now = new Date();
+            const pad = (n) => n.toString().padStart(2, '0');
+            const yy = now.getFullYear().toString().slice(2);
+            const mm = pad(now.getMonth() + 1);
+            const dd = pad(now.getDate());
+            const hh = pad(now.getHours());
+            const min = pad(now.getMinutes());
+            return `${yy}${mm}${dd}${hh}${min}`;
+        }
+
         // --- APP STATE ---
         let state = {
             notes: [], folders: [], boards: [], 
@@ -362,7 +383,7 @@
 
         // --- DATA ---
         function loadData() {
-            const raw = localStorage.getItem('nexus_data_v15');
+            const raw = localStorage.getItem('nexus_data_v16');
             if (raw) {
                 const data = JSON.parse(raw);
                 state.notes = data.notes || []; state.folders = data.folders || [];
@@ -388,19 +409,19 @@
         }
 
         function saveData() {
-            localStorage.setItem('nexus_data_v15', JSON.stringify({ 
+            localStorage.setItem('nexus_data_v16', JSON.stringify({ 
                 notes: state.notes, folders: state.folders, boards: state.boards, activeBoardId: state.activeBoardId, kanban: state.kanban
             }));
             el.saveStatus.innerText = 'Saved'; setTimeout(() => el.saveStatus.innerText = '', 2000);
         }
 
-        function resetData() { if(confirm("Reset all data?")) { localStorage.removeItem('nexus_data_v15'); location.reload(); } }
+        function resetData() { if(confirm("Reset all data?")) { localStorage.removeItem('nexus_data_v16'); location.reload(); } }
 
         function createDefaultNote() {
-            const content = `# Nexus v15 Demo\n\n### 1. Sidebar\n- **Shift+Click:** Select ranges.\n- **Ctrl+Click:** Select multiple.\n- **Drag:** Move notes to folders/root.\n\n### 2. Kanban\n- **Drag Cards:** Reorder within columns or move between them.\n\n### 3. Timestamp\n- Click the clock icon in sidebar. \n- Creates note with ID ` + new Date().toISOString().slice(2,16).replace(/[-:T]/g, '') + `\n\n### 4. Editor\n- **Checkboxes:**\n  - [x] Task A\n  - [ ] Task B\n\n### 5. Export\n- Filename will be ` + new Date().toISOString().slice(2,16).replace(/[-:T]/g, '') + `.json`;
+            const content = `# Nexus v16 Demo\n\n### 1. Markdown Features\n- **Bold**, *Italic*, [Links](https://example.com)\n- **Lists**:\n  - Unordered\n  - Ordered\n    1. Sub-item\n\n### 2. Code Blocks\n\`\`\`python\nprint("Hello Nexus!")\n\`\`\`\n\n### 3. Checkboxes\n- [x] Task Completed\n- [ ] Task Pending (Click me!)\n\n### 4. Math (LaTeX)\n$$ E = mc^2 $$\n\n### 5. Tables\n| Feature | Status |\n| :--- | :--- |\n| Tags | #working |\n| Tables | Working |`;
             
             const note = {
-                id: 'demo_note', title: 'Nexus Demo', content: content, folderId: null, tags: ['demo'],
+                id: 'demo_note', title: 'Nexus Demo', content: content, folderId: null, tags: ['demo', 'features'],
                 boardId: state.activeBoardId, status: 'todo', wb: { x: 100, y: 100 }, timestamp: Date.now()
             };
             state.notes = [note]; saveData(); setActiveNote(note.id);
@@ -418,13 +439,10 @@
         }
 
         function handleTsButton() {
-            const ts = new Date().toISOString().slice(2,16).replace(/[-:T]/g, '');
+            const ts = getLocalTimestamp();
             if (state.activeNoteId && state.currentView === 'editor') {
-                // Append to current note
-                const note = state.notes.find(n => n.id === state.activeNoteId);
                 const content = el.editor.value;
-                // Simple append at end or cursor position. Using simpler append for now.
-                const newContent = content + `\n\n**${ts}**\n`;
+                const newContent = content + ` ${ts} `;
                 el.editor.value = newContent;
                 updateActiveNote('content', newContent);
                 updatePreview();
@@ -434,7 +452,7 @@
         }
 
         function exportData() {
-            const ts = new Date().toISOString().slice(2,16).replace(/[-:T]/g, '');
+            const ts = getLocalTimestamp();
             const dataStr = JSON.stringify({ notes: state.notes, folders: state.folders, boards: state.boards, activeBoardId: state.activeBoardId, kanban: state.kanban }, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
@@ -448,7 +466,7 @@
             reader.onload = (event) => {
                 try {
                     const data = JSON.parse(event.target.result);
-                    if (confirm("Overwrite data?")) { localStorage.setItem('nexus_data_v15', JSON.stringify(data)); location.reload(); }
+                    if (confirm("Overwrite data?")) { localStorage.setItem('nexus_data_v16', JSON.stringify(data)); location.reload(); }
                 } catch (err) { alert("Invalid file"); }
             }; reader.readAsText(file);
         }
@@ -514,10 +532,7 @@
         }
 
         function handleNoteClick(e, id) {
-            // Logic for multi-select
             if (e.shiftKey && state.lastSelectedId) {
-                // Range selection
-                // Get currently visible notes in order
                 const visibleIds = getVisibleNoteIds();
                 const start = visibleIds.indexOf(state.lastSelectedId);
                 const end = visibleIds.indexOf(id);
@@ -531,15 +546,13 @@
                 else state.selectedIds.add(id);
                 state.lastSelectedId = id;
             } else {
-                setActiveNote(id); // Clears selection
+                setActiveNote(id); 
                 return;
             }
             renderTree();
         }
 
         function getVisibleNoteIds() {
-            // Helper to get visible IDs based on current filter/folder state
-            // Re-running filter logic briefly
             const search = document.getElementById('search-input').value.toLowerCase();
             const tagTextFilter = state.sidebar.filterText ? state.sidebar.filterText.split(',').map(t => t.trim().toLowerCase().replace('#','')).filter(t=>t) : [];
             const filterFn = (n) => {
