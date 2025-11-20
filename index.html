@@ -103,6 +103,13 @@
         /* Sidebar & Common */
         .sidebar-item:hover { background-color: var(--bg-hover); }
         .sidebar-item.active { background-color: var(--bg-hover); border-left: 3px solid var(--accent); font-weight: 600; color: var(--text-main); }
+        /* Multi-selection State */
+        .sidebar-item.selected { background-color: rgba(139, 92, 246, 0.15); border-left: 3px solid var(--accent); }
+        /* Drag Drop States */
+        .drop-target { border: 2px dashed var(--accent) !important; background-color: rgba(139, 92, 246, 0.1) !important; }
+        .root-drop-zone { min-height: 50px; flex: 1; border-top: 1px solid transparent; }
+        .root-drop-zone.drop-target { border-top: 2px dashed var(--accent) !important; }
+
         
         /* Whiteboard */
         .bg-dot-pattern {
@@ -146,11 +153,33 @@
         .kanban-list.items-col { flex-direction: column; }
         .kanban-list.items-row { flex-direction: row; flex-wrap: wrap; }
 
-        .kanban-card { background: var(--bg-item); border: 1px solid var(--border-main); padding: 12px; border-radius: 6px; cursor: grab; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; }
+        /* Glassy Kanban Card */
+        .kanban-card { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(8px); 
+            border: 1px solid var(--border-main); 
+            padding: 12px; 
+            border-radius: 6px; 
+            cursor: grab; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            transition: all 0.2s; 
+        }
+        html.dark .kanban-card { background: rgba(31, 41, 55, 0.7); }
+        
         .kanban-list.items-col .kanban-card { width: 100%; }
         .kanban-list.items-row .kanban-card { width: 220px; height: 120px; overflow: hidden; }
         .kanban-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .kanban-drop-zone { min-height: 50px; height: 100%; }
+
+        /* Glassy Panels */
+        .glassy-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-main);
+        }
+        html.dark .glassy-panel {
+            background: rgba(17, 24, 39, 0.8);
+        }
 
         /* Views Management */
         .view-section { display: none; height: 100%; width: 100%; }
@@ -186,14 +215,22 @@
 
     <!-- Sidebar -->
     <aside id="sidebar-tree" class="w-60 bg-bgSidebar border-r border-borderMain flex flex-col flex-shrink-0 transition-all duration-300">
-        <div class="p-3 border-b border-borderMain flex flex-col gap-2">
+        <div class="p-3 border-b border-borderMain flex flex-col gap-2" ondragover="allowDrop(event)" ondrop="dropToRoot(event)">
             <h2 class="font-bold text-sm text-textMain">Nexus Core</h2>
             <div class="flex flex-col gap-1">
                 <input type="text" id="search-input" placeholder="Search..." class="w-full bg-bgMain border border-borderMain rounded px-2 py-1 text-xs focus:outline-none focus:border-accent text-textMain">
                 <input type="text" id="sidebar-tag-filter" placeholder="Filter tags (e.g. demo, work)" class="w-full bg-bgMain border border-borderMain rounded px-2 py-1 text-xs focus:outline-none focus:border-accent text-textMain">
             </div>
         </div>
-        <div id="file-tree" class="flex-1 overflow-y-auto p-2 space-y-0.5 text-sm"></div>
+        
+        <!-- File Tree Container -->
+        <div id="file-tree" class="flex-1 overflow-y-auto p-2 space-y-0.5 text-sm" ondragover="allowDrop(event)"></div>
+        
+        <!-- Root Drop Zone / Empty Space at bottom -->
+        <div class="root-drop-zone p-2 text-xs text-textMuted text-center flex items-end justify-center opacity-50" ondragover="allowDrop(event)" ondrop="dropToRoot(event)">
+            Drop here to move to root
+        </div>
+
         <div class="p-2 border-t border-borderMain bg-bgSidebar grid grid-cols-2 gap-2">
             <button id="btn-new-page" class="bg-accent hover:bg-opacity-90 text-white py-1.5 rounded text-xs font-bold"><i class="fa-solid fa-plus"></i> Note</button>
             <button id="btn-new-folder" class="bg-white dark:bg-gray-800 border border-borderMain text-textMain py-1.5 rounded text-xs font-bold"><i class="fa-solid fa-folder"></i> Folder</button>
@@ -231,17 +268,17 @@
             <div class="absolute inset-0 bg-dot-pattern pointer-events-none z-0"></div>
             <div id="wb-canvas" class="absolute top-0 left-0 transform-origin-0-0" style="transform: translate(0px, 0px) scale(1);"></div>
             
-            <div class="absolute top-4 left-4 bg-bgSidebar/90 backdrop-blur border border-borderMain p-2 rounded shadow text-xs z-50 flex flex-col gap-2">
-               <div class="flex justify-between items-center border-b border-borderMain pb-1 mb-1">
-                   <span class="font-bold text-textMain">Whiteboard</span>
+            <div class="absolute top-4 left-4 glassy-panel p-3 rounded-lg shadow-lg text-xs z-50 flex flex-col gap-2">
+               <div class="flex justify-between items-center border-b border-borderMain pb-2 mb-1">
+                   <span class="font-bold text-textMain text-sm">Whiteboard</span>
                    <button onclick="autoArrangeWhiteboard()" class="text-accent hover:text-textMain px-1" title="Auto Arrange Grid"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                </div>
-               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-status" class="mr-1" checked> Status</label>
-               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-tags" class="mr-1" checked> Tags</label>
-               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-hidden" class="mr-1"> Show Hidden</label>
+               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-status" class="mr-2 accent-accent" checked> Status</label>
+               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-tags" class="mr-2 accent-accent" checked> Tags</label>
+               <label class="flex items-center cursor-pointer text-textMuted hover:text-textMain"><input type="checkbox" id="wb-show-hidden" class="mr-2 accent-accent"> Show Hidden</label>
             </div>
 
-            <div class="absolute bottom-4 right-4 bg-bgSidebar/90 backdrop-blur border border-borderMain p-2 rounded shadow text-xs text-textMuted z-50">
+            <div class="absolute bottom-4 right-4 glassy-panel p-2 rounded shadow text-xs text-textMuted z-50">
                 Ctrl + Scroll to Zoom • Drag to Pan • Dbl Click to Edit
             </div>
         </div>
@@ -268,7 +305,7 @@
                      <div id="kanban-container"></div>
                 </div>
             </div>
-             <div class="absolute bottom-4 left-4 bg-bgSidebar/90 backdrop-blur border border-borderMain p-2 rounded shadow text-xs text-textMuted z-50">
+             <div class="absolute bottom-4 left-4 glassy-panel p-2 rounded shadow text-xs text-textMuted z-50">
                 Drag Background to Pan • Ctrl+Scroll to Zoom
             </div>
         </div>
@@ -276,25 +313,28 @@
         <!-- GRAPH VIEW -->
         <div id="view-graph" class="view-section relative">
             <canvas id="graph-canvas" class="block w-full h-full"></canvas>
-            <div class="absolute top-4 right-4 bg-bgSidebar border border-borderMain p-3 rounded-lg shadow-lg text-xs flex flex-col gap-2 z-50">
-                <div id="graph-filter-status" class="hidden bg-accent text-white px-2 py-1 rounded flex justify-between mb-2 items-center">
-                    <span id="filter-tag-name" class="mr-2 font-bold"></span>
+            <div class="absolute top-4 right-4 glassy-panel p-3 rounded-lg shadow-lg text-xs flex flex-col gap-3 z-50 w-48">
+                <div id="graph-filter-status" class="hidden bg-accent text-white px-2 py-1 rounded flex justify-between items-center">
+                    <span id="filter-tag-name" class="mr-2 font-bold truncate"></span>
                     <button onclick="clearGraphFilter()" class="hover:text-gray-200"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="flex flex-col gap-1 pb-2 border-b border-borderMain mb-2">
-                    <span class="text-textMuted font-bold">Filter Status:</span>
-                    <select id="graph-status-filter" class="bg-bgMain border border-borderMain rounded px-1 py-0.5 text-textMain">
+                
+                <div class="flex flex-col gap-1 pb-2 border-b border-borderMain">
+                    <span class="text-textMuted font-bold uppercase tracking-wider text-[10px]">Filters</span>
+                    <select id="graph-status-filter" class="bg-bgMain border border-borderMain rounded px-2 py-1 text-textMain mt-1">
                         <option value="all">All Statuses</option>
                     </select>
-                    <span class="text-textMuted font-bold mt-1">Filter Tags:</span>
-                    <input type="text" id="graph-tag-filter" placeholder="e.g. demo, work" class="bg-bgMain border border-borderMain rounded px-1 py-0.5 text-textMain">
+                    <input type="text" id="graph-tag-filter" placeholder="Filter Tags (comma sep)" class="bg-bgMain border border-borderMain rounded px-2 py-1 text-textMain mt-1">
                 </div>
-                <label class="flex items-center cursor-pointer text-textMain"><input type="checkbox" id="chk-show-tags" class="mr-2 accent-accent" checked> Show Tags</label>
-                <label class="flex items-center cursor-pointer text-textMain"><input type="checkbox" id="chk-freeze-graph" class="mr-2 accent-accent"> Freeze Nodes</label>
+
+                <div class="flex flex-col gap-2">
+                    <label class="flex items-center cursor-pointer text-textMain hover:text-accent transition-colors"><input type="checkbox" id="chk-show-tags" class="mr-2 accent-accent" checked> Show Tags</label>
+                    <label class="flex items-center cursor-pointer text-textMain hover:text-accent transition-colors"><input type="checkbox" id="chk-freeze-graph" class="mr-2 accent-accent"> Freeze Nodes</label>
+                </div>
             </div>
              <div class="absolute bottom-4 left-4 flex gap-2 z-50">
-                <button onclick="resetGraphView()" class="bg-bgSidebar border border-borderMain p-2 rounded shadow hover:bg-bgHover text-textMain" title="Reset View"><i class="fa-solid fa-crosshairs"></i></button>
-                <div class="bg-bgSidebar border border-borderMain p-2 rounded shadow text-xs text-textMuted pointer-events-none">
+                <button onclick="resetGraphView()" class="glassy-panel p-2 rounded shadow hover:bg-bgHover text-textMain" title="Reset View"><i class="fa-solid fa-crosshairs"></i></button>
+                <div class="glassy-panel p-2 rounded shadow text-xs text-textMuted pointer-events-none">
                     Drag node to move • Click node to edit • Pan empty space
                 </div>
             </div>
@@ -312,6 +352,7 @@
             activeNoteId: null,
             currentView: 'editor',
             isEditMode: true,
+            selectedIds: new Set(), // For multi-selection
             theme: localStorage.getItem('nexus_theme') || 'light',
             wb: { x: 100, y: 100, scale: 1, isPanning: false, lastX: 0, lastY: 0, showStatus: true, showTags: true, showHidden: false },
             kanban: { boardLayout: 'row', itemLayout: 'col', x: 0, y: 0, scale: 1, isPanning: false, lastX: 0, lastY: 0 },
@@ -419,7 +460,7 @@
 
         // --- DATA ---
         function loadData() {
-            const raw = localStorage.getItem('nexus_data_v11');
+            const raw = localStorage.getItem('nexus_data_v14'); // Bumped version
             if (raw) {
                 const data = JSON.parse(raw);
                 state.notes = data.notes || [];
@@ -450,7 +491,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('nexus_data_v11', JSON.stringify({ 
+            localStorage.setItem('nexus_data_v14', JSON.stringify({ 
                 notes: state.notes, 
                 folders: state.folders,
                 boards: state.boards,
@@ -463,20 +504,20 @@
 
         function resetData() {
             if(confirm("Reset all data to demo state?")) {
-                localStorage.removeItem('nexus_data_v11');
+                localStorage.removeItem('nexus_data_v14');
                 location.reload();
             }
         }
 
         function createDefaultNote() {
-            const demoContent = `# Nexus v11 Demo\n\n### Kanban\n- Drag headers to reorder columns.\n- Use **Pan & Zoom** (drag background, ctrl+scroll).\n- Tags show on cards. Click to filter graph.\n\n### Whiteboard\n- **"Show Hidden"** reveals 'no-status' notes.\n- **"Auto Arrange"** organizes notes.\n\n### Graph\n- **"Reset View"** centers graph.\n- Drag nodes to pin them while simulation runs.\n- Click nodes to edit.\n\n### Checkboxes\n- [x] Task A\n- [ ] Task B (Click me!) \n\n### Tables \n| Feature | Status | \n| :--- | :--- | \n| LaTeX | $E=mc^2$ | \n| Tags | #demo |`;
+            const demoContent = `# Welcome to Nexus v14\n\n### 1. Multi-Selection & Drag-Drop\n- **Ctrl+Click** notes in the sidebar to select multiple.\n- **Drag** them into folders or onto the "Nexus Core" header to move to root.\n\n### 2. Kanban Power\n- **Layouts:** Toggle Horizontal/Vertical view using buttons above.\n- **Tags:** Shown on cards. Click tag to filter graph.\n\n### 3. Graph Features\n- **Tag Filtering:** Type "demo, work" in the new filter box.\n- **Drag to Pin:** Move nodes to arrange your thought cloud.\n\n### 4. Editor Features\n- **Checkboxes:**\n  - [x] Task A (Completed)\n  - [ ] Task B (Click me to toggle)\n- **Math:** $e^{i\\pi} + 1 = 0$\n\n| Feature | Status |\n| :--- | :--- |\n| Sync | Ready |\n| LaTeX | Ready |`;
             
             const note = {
                 id: 'demo_note',
-                title: 'Welcome to Nexus',
+                title: 'Nexus Demo Note',
                 content: demoContent,
                 folderId: null,
-                tags: ['demo', 'features'],
+                tags: ['demo', 'tutorial'],
                 boardId: state.activeBoardId,
                 status: 'todo', 
                 wb: { x: 100, y: 100 },
@@ -511,7 +552,7 @@
                 try {
                     const data = JSON.parse(event.target.result);
                     if (confirm("This will overwrite current data. Continue?")) {
-                        localStorage.setItem('nexus_data_v11', JSON.stringify(data));
+                        localStorage.setItem('nexus_data_v14', JSON.stringify(data));
                         location.reload();
                     }
                 } catch (err) { alert("Invalid file format"); }
@@ -605,6 +646,10 @@
 
         function setActiveNote(id) {
             state.activeNoteId = id;
+            // Single click selection logic
+            state.selectedIds.clear();
+            state.selectedIds.add(id);
+            
             const note = state.notes.find(n => n.id === id);
             if (!note) return;
             el.title.value = note.title;
@@ -614,6 +659,17 @@
             el.status.value = note.status;
             updatePreview();
             renderTree();
+        }
+
+        function handleNoteClick(e, id) {
+            e.stopPropagation();
+            if (e.ctrlKey || e.metaKey) {
+                if (state.selectedIds.has(id)) state.selectedIds.delete(id);
+                else state.selectedIds.add(id);
+                renderTree();
+            } else {
+                setActiveNote(id);
+            }
         }
 
         function updateBoardUI() {
@@ -665,12 +721,16 @@
             const index = allChecks.indexOf(checkbox);
             let raw = el.editor.value;
             let matchIndex = -1;
-            const regex = /^([-*]\s\[)([ x])(\])/gm;
+            
+            // Updated regex to better handle list items with potential indentation
+            const regex = /^(\s*[-*]\s\[)([ x])(\])/gm;
+            
             const newRaw = raw.replace(regex, (match, prefix, state, suffix) => {
                 matchIndex++;
                 if (matchIndex === index) return `${prefix}${state === ' ' ? 'x' : ' '}${suffix}`;
                 return match;
             });
+            
             if (newRaw !== raw) {
                 el.editor.value = newRaw;
                 updateActiveNote('content', newRaw);
@@ -688,10 +748,8 @@
             const cleanTag = tagName.startsWith('#') ? tagName.substring(1) : tagName;
             switchView('graph');
             state.graph.filterTag = cleanTag;
-            // Set the filter input to match
             state.graph.textFilter = cleanTag;
             el.graphTagFilter.value = cleanTag;
-            
             el.graphFilterStatus.classList.remove('hidden');
             el.filterTagName.innerText = tagName;
             requestAnimationFrame(() => initGraph());
@@ -932,14 +990,12 @@
 
             let visibleNotes = state.notes;
             
-            // Text Filter (Any Match on Tags)
             if (state.graph.textFilter) {
                 const searchTags = state.graph.textFilter.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
                 if (searchTags.length > 0) {
                     visibleNotes = visibleNotes.filter(n => n.tags.some(tag => searchTags.some(st => tag.toLowerCase().includes(st))));
                 }
             }
-            // Click Filter (Specific Tag)
             if (state.graph.filterTag) {
                 visibleNotes = visibleNotes.filter(n => n.tags.includes(state.graph.filterTag));
             }
@@ -1054,11 +1110,25 @@
         el.graphCanvas.addEventListener('wheel', e => { e.preventDefault(); graphTransform.k = Math.max(0.1, graphTransform.k - e.deltaY * 0.001); drawGraph(); });
 
         // --- SIDEBAR FILTER ---
+        function updateSidebarFilterUI() {
+             const type = el.sidebarFilterType.value;
+             state.sidebar.filterType = type;
+             el.sidebarFilterVal.innerHTML = '<option value="">Select...</option>';
+             el.sidebarFilterVal.disabled = (type === 'all');
+             if(type === 'status') {
+                 const statuses = new Set(state.notes.map(n => n.status));
+                 el.sidebarFilterVal.innerHTML += Array.from(statuses).map(s => `<option value="${s}">${s}</option>`).join('');
+             } else if(type === 'tag') {
+                 const tags = new Set(state.notes.flatMap(n => n.tags));
+                 el.sidebarFilterVal.innerHTML += Array.from(tags).map(t => `<option value="${t}">${t}</option>`).join('');
+             }
+             renderTree();
+        }
+
         function renderTree() {
             const c = document.getElementById('file-tree'); c.innerHTML = '';
             const search = document.getElementById('search-input').value.toLowerCase();
             
-            // New Tag Text Filter
             const tagTextFilter = state.sidebar.filterText ? state.sidebar.filterText.split(',').map(t => t.trim().toLowerCase().replace('#','')).filter(t=>t) : [];
 
             const filterFn = (n) => {
@@ -1070,22 +1140,85 @@
                 return matchesSearch && matchesTagText;
             };
 
+            // Root Drop Zone logic handled via CSS classes on main container or specific div
+            
             state.folders.forEach(f => {
                 const div = document.createElement('div');
-                div.innerHTML = `<div class="p-1 text-textMain font-bold flex items-center cursor-pointer hover:bg-bgHover rounded"><i class="fa-solid ${f.isOpen?'fa-chevron-down':'fa-chevron-right'} w-4 text-xs mr-1 text-textMuted"></i> ${f.name}</div>`;
-                div.onclick = () => { f.isOpen = !f.isOpen; saveData(); renderTree(); };
+                // Folder Draggable
+                div.draggable = false; // Folders not draggable yet for simplicity
+                div.className = 'folder-container mb-1';
+                
+                const header = document.createElement('div');
+                header.className = 'p-1 text-textMain font-bold flex items-center cursor-pointer hover:bg-bgHover rounded';
+                header.innerHTML = `<i class="fa-solid ${f.isOpen?'fa-chevron-down':'fa-chevron-right'} w-4 text-xs mr-1 text-textMuted"></i> ${f.name}`;
+                header.onclick = () => { f.isOpen = !f.isOpen; saveData(); renderTree(); };
+                
+                // Drop target: Move note TO folder
+                header.ondragover = (e) => { e.preventDefault(); header.classList.add('drop-target'); };
+                header.ondragleave = () => header.classList.remove('drop-target');
+                header.ondrop = (e) => handleDrop(e, f.id);
+
+                div.appendChild(header);
+
+                if(f.isOpen) {
+                    const fNotes = state.notes.filter(n => n.folderId === f.id && filterFn(n));
+                    fNotes.forEach(n => div.appendChild(createTreeItem(n, true)));
+                }
                 c.appendChild(div);
-                if(f.isOpen) state.notes.filter(n => n.folderId === f.id && filterFn(n)).forEach(n => c.appendChild(createTreeItem(n, true)));
             });
-            state.notes.filter(n => !n.folderId && filterFn(n)).forEach(n => c.appendChild(createTreeItem(n, false)));
+
+            const rootNotes = state.notes.filter(n => !n.folderId && filterFn(n));
+            rootNotes.forEach(n => c.appendChild(createTreeItem(n, false)));
         }
 
         function createTreeItem(note, indent) {
             const div = document.createElement('div');
-            div.className = `sidebar-item p-1 flex items-center cursor-pointer rounded ${indent?'ml-4':''} ${note.id===state.activeNoteId?'active':''}`;
+            const isSelected = state.selectedIds.has(note.id);
+            div.className = `sidebar-item p-1 flex items-center cursor-pointer rounded ${indent?'ml-4':''} ${note.id===state.activeNoteId?'active':''} ${isSelected?'selected':''}`;
+            div.draggable = true;
             div.innerHTML = `<i class="fa-regular fa-file-lines text-xs mr-2 w-4 text-center text-textMuted"></i> <span class="truncate">${note.title}</span>`;
-            div.onclick = () => setActiveNote(note.id);
+            
+            div.onclick = (e) => handleNoteClick(e, note.id);
+            div.ondragstart = (e) => handleDragStart(e, note.id);
+            
             return div;
+        }
+
+        // Drag & Drop Handlers
+        function handleDragStart(e, id) {
+            if (!state.selectedIds.has(id)) {
+                state.selectedIds.clear();
+                state.selectedIds.add(id);
+                renderTree(); // Visual update
+            }
+            const ids = Array.from(state.selectedIds);
+            e.dataTransfer.setData('note-ids', JSON.stringify(ids));
+            e.dataTransfer.effectAllowed = "move";
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('root-drop-zone')) e.target.classList.add('drop-target');
+        }
+
+        function handleDrop(e, targetFolderId) {
+            e.preventDefault();
+            e.target.classList.remove('drop-target');
+            const data = e.dataTransfer.getData('note-ids');
+            if (!data) return;
+            
+            const ids = JSON.parse(data);
+            state.notes.forEach(n => {
+                if (ids.includes(n.id)) {
+                    n.folderId = targetFolderId;
+                }
+            });
+            saveData();
+            renderTree();
+        }
+        
+        window.dropToRoot = (e) => {
+             handleDrop(e, null);
         }
 
         function toggleTheme() { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(state.theme); if(state.currentView === 'graph') drawGraph(); }
