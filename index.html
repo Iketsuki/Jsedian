@@ -201,8 +201,8 @@
         <div id="graph-container">
             <canvas id="graph-canvas"></canvas>
             
-            <!-- Left Controls -->
-            <div class="absolute top-4 left-4 flex flex-col gap-2">
+            <!-- Left Controls (Moved down to top-20) -->
+            <div class="absolute top-20 left-4 flex flex-col gap-2">
                  <button id="btn-close-graph" class="bg-white dark:bg-gray-800 border border-borderMain text-textMain px-4 py-2 rounded shadow-lg hover:bg-bgHover text-sm font-bold flex items-center">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Back to Editor
                 </button>
@@ -212,8 +212,8 @@
                 </div>
             </div>
 
-            <!-- Right Controls -->
-            <div class="absolute top-4 right-4 graph-controls flex flex-col gap-2 text-xs text-textMuted">
+            <!-- Right Controls (Moved down to top-20) -->
+            <div class="absolute top-20 right-4 graph-controls flex flex-col gap-2 text-xs text-textMuted">
                 <label class="flex items-center cursor-pointer hover:text-textMain">
                     <input type="checkbox" id="chk-show-tags" class="mr-2 accent-emerald-500" checked> 
                     Show Tags
@@ -225,6 +225,7 @@
                 <div class="h-px bg-borderMain my-1"></div>
                 <p><i class="fa-solid fa-hand-pointer mr-1"></i> Drag nodes</p>
                 <p><i class="fa-solid fa-magnifying-glass mr-1"></i> Scroll to zoom</p>
+                <p><i class="fa-regular fa-circle mr-1"></i> Click empty to close</p>
             </div>
         </div>
 
@@ -508,18 +509,19 @@
             }
         }
 
-        // --- GRAPH ENGINE (With Filters & Freeze) ---
+        // --- GRAPH ENGINE ---
         let ctx = el.graphCanvas.getContext('2d');
         let transform = { x: 0, y: 0, k: 1 };
         let nodes = [], links = [];
-        let isDragging = false, dragStart = { x: 0, y: 0 }, draggedNode = null;
+        let isDragging = false, dragStart = { x: 0, y: 0, isClick: false }, clickOrigin = { x: 0, y: 0 };
+        let draggedNode = null;
         let animationFrameId;
         
         // UI Listeners
         el.chkShowTags.addEventListener('change', (e) => { state.graphShowTags = e.target.checked; initGraph(); });
         el.chkFreezeGraph.addEventListener('change', (e) => { 
             state.graphFrozen = e.target.checked; 
-            if(!state.graphFrozen) animateGraph(); // Resume
+            if(!state.graphFrozen) animateGraph(); 
         });
 
         function initGraph() {
@@ -528,8 +530,8 @@
             el.graphCanvas.width = w;
             el.graphCanvas.height = h;
             
-            // Reset Freeze on init usually implies movement reset, but let's keep user preference
-            // if manual freeze is on, we don't simulate.
+            // Reset Camera to Center
+            transform = { x: w/2, y: h/2, k: 1 };
 
             // Update Filter UI
             if(state.graphFilterTag) {
@@ -542,49 +544,32 @@
             // 1. Filter Sources
             let activeNotes = state.notes;
             if (state.graphFilterTag) {
-                // Show only notes containing the tag
                 activeNotes = state.notes.filter(n => n.tags.includes(state.graphFilterTag));
             }
 
-            // 2. Create Nodes
+            // 2. Create Nodes (Spawn Centered around 0,0 which translates to screen center)
             nodes = activeNotes.map(n => ({
                 id: n.id, label: n.title, type: 'note',
-                x: Math.random() * w, y: Math.random() * h, 
+                // Random spread centered around 0
+                x: (Math.random() - 0.5) * w * 0.8, 
+                y: (Math.random() - 0.5) * h * 0.8, 
                 vx: 0, vy: 0, radius: 6
             }));
 
-            // 3. Add Tags (if enabled)
-            // If filtering by a specific tag, ALWAYS show that tag node.
-            // If not filtering, check checkbox.
+            // 3. Add Tags
             const shouldShowTags = state.graphShowTags || state.graphFilterTag;
 
             if (shouldShowTags) {
                 const allTags = new Set();
-                
-                // Gather tags only from active notes to keep graph clean
                 activeNotes.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
                 
                 allTags.forEach(tag => {
-                    // If filtering, only show the filter tag (optional design choice, but safer to show all related)
-                    // Let's show all tags that appear in the filtered notes, 
-                    // BUT if we are strictly filtering, maybe only the relevant one?
-                    // Let's show all tags connected to these visible notes for context.
-                    
-                    // Check if this tag should be visible
-                    // If filtering: Show specific tag OR show all? 
-                    // User asked: "show a graph view with nodes that with that tag only"
-                    // Usually this means Central Tag Node <-> Note 1, Note 2...
-                    
-                    if (state.graphFilterTag && tag !== state.graphFilterTag) {
-                         // If we are in filter mode, do we hide other tags?
-                         // Let's keep it simple: Only show the specific tag node we filtered by?
-                         // Or show others? Let's show only the filter tag to reduce noise.
-                         return;
-                    }
+                    if (state.graphFilterTag && tag !== state.graphFilterTag) return;
                     
                     nodes.push({
                         id: `tag_${tag}`, label: tag, type: 'tag',
-                        x: Math.random() * w, y: Math.random() * h,
+                        x: (Math.random() - 0.5) * w * 0.6, 
+                        y: (Math.random() - 0.5) * h * 0.6,
                         vx: 0, vy: 0, radius: 4
                     });
                 });
@@ -593,17 +578,14 @@
             // 4. Create Links
             links = [];
             activeNotes.forEach(src => {
-                // Link to other visible notes
                 const wikiRegex = /\[\[(.*?)\]\]/g;
                 let match;
                 while ((match = wikiRegex.exec(src.content)) !== null) {
                     const target = activeNotes.find(n => n.title.toLowerCase() === match[1].toLowerCase());
                     if (target) links.push({ source: src.id, target: target.id });
                 }
-                // Link to Tags
                 if (shouldShowTags) {
                     (src.tags || []).forEach(tag => {
-                        // Only link if tag node exists (filtered logic above)
                         if(nodes.find(n => n.id === `tag_${tag}`)) {
                             links.push({ source: src.id, target: `tag_${tag}` });
                         }
@@ -611,7 +593,6 @@
                 }
             });
 
-            transform.x = w/2; transform.y = h/2;
             if (!state.graphFrozen) animateGraph();
             else drawGraph();
         }
@@ -619,17 +600,17 @@
         function animateGraph() {
             if(!state.isGraphOpen || state.graphFrozen) return;
 
-            const repulsion = 500;
+            const repulsion = 600;
             const spring = 0.005;
             let totalEnergy = 0;
             
-            // Physics Calc
+            // Physics
             for (let i=0; i<nodes.length; i++) {
                 for (let j=i+1; j<nodes.length; j++) {
                     let dx = nodes[j].x - nodes[i].x;
                     let dy = nodes[j].y - nodes[i].y;
                     let d2 = dx*dx + dy*dy + 0.1;
-                    if (d2 < 100000) {
+                    if (d2 < 150000) {
                         let f = repulsion / d2;
                         let fx = (dx / Math.sqrt(d2)) * f;
                         let fy = (dy / Math.sqrt(d2)) * f;
@@ -649,25 +630,18 @@
                 }
             });
 
-            // Update & Damping
             nodes.forEach(n => {
                 if (n !== draggedNode) {
                     n.x += n.vx; n.y += n.vy;
-                    n.x -= n.x * 0.0015; n.y -= n.y * 0.0015; // Gentle gravity center
+                    n.x -= n.x * 0.002; n.y -= n.y * 0.002; // Center Gravity
                 }
-                n.vx *= 0.80; n.vy *= 0.80; // Higher damping to settle faster
+                n.vx *= 0.80; n.vy *= 0.80;
                 totalEnergy += Math.abs(n.vx) + Math.abs(n.vy);
             });
 
             drawGraph();
 
-            // Auto-freeze if energy is low
-            if (totalEnergy < 0.2 && !isDragging) {
-                // Stop loop, but don't check the freeze box
-                // Just stop calling requestAnimationFrame
-                return; 
-            }
-            
+            if (totalEnergy < 0.2 && !isDragging) return;
             animationFrameId = requestAnimationFrame(animateGraph);
         }
 
@@ -717,6 +691,8 @@
             const x = (e.clientX - rect.left - transform.x) / transform.k;
             const y = (e.clientY - rect.top - transform.y) / transform.k;
             
+            clickOrigin = { x: e.clientX, y: e.clientY };
+            
             draggedNode = nodes.find(n => {
                 let dx = n.x - x, dy = n.y - y;
                 return dx*dx + dy*dy < 100; 
@@ -725,34 +701,44 @@
             if(draggedNode) {
                 isDragging = true;
                 dragStart = { x: e.clientX, y: e.clientY, isClick: true };
-                if(!state.graphFrozen) animateGraph(); // Wake up physics
+                if(!state.graphFrozen) animateGraph();
             } else {
                 isDragging = true;
-                dragStart = { x: e.clientX, y: e.clientY, isClick: false };
+                dragStart = { x: e.clientX, y: e.clientY, isClick: true };
             }
         });
 
         el.graphCanvas.addEventListener('mousemove', e => {
             if(!isDragging) return;
+
+            // Tolerance check for "click" vs "drag"
+            const distMoved = Math.sqrt(Math.pow(e.clientX - clickOrigin.x, 2) + Math.pow(e.clientY - clickOrigin.y, 2));
+            if (distMoved > 5) dragStart.isClick = false;
             
             if(draggedNode) {
-                dragStart.isClick = false;
                 const rect = el.graphCanvas.getBoundingClientRect();
                 draggedNode.x = (e.clientX - rect.left - transform.x) / transform.k;
                 draggedNode.y = (e.clientY - rect.top - transform.y) / transform.k;
                 draggedNode.vx = 0; draggedNode.vy = 0;
-                if(!state.graphFrozen) animateGraph(); // Keep waking
+                if(!state.graphFrozen) animateGraph();
             } else {
                 transform.x += e.clientX - dragStart.x;
                 transform.y += e.clientY - dragStart.y;
                 dragStart.x = e.clientX; dragStart.y = e.clientY;
-                drawGraph(); // Just redraw, no physics needed for pan
+                drawGraph();
             }
         });
 
         el.graphCanvas.addEventListener('mouseup', () => {
-            if(draggedNode && dragStart.isClick) {
-                if(draggedNode.type === 'note') setActiveNote(draggedNode.id);
+            if(dragStart.isClick) {
+                if(draggedNode) {
+                    // Node Click
+                    if(draggedNode.type === 'note') setActiveNote(draggedNode.id);
+                } else {
+                    // Background Click -> Close
+                    state.isGraphOpen = false;
+                    el.graphContainer.style.display = 'none';
+                }
             }
             isDragging = false;
             draggedNode = null;
@@ -787,7 +773,7 @@
         document.getElementById('btn-toggle-view').addEventListener('click', () => {
             state.isGraphOpen = true;
             el.graphContainer.style.display = 'block';
-            state.graphFilterTag = null; // Reset filter on general open
+            state.graphFilterTag = null;
             initGraph();
         });
         document.getElementById('btn-close-graph').addEventListener('click', () => {
